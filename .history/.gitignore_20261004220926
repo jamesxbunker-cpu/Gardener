@@ -1,0 +1,64 @@
+# ---- build output ---------------------------------------------------
+build/
+build-*/
+cmake-build-*/
+out/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.obj
+
+# ---- CMake ----------------------------------------------------------
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+install_manifest.txt
+compile_commands.json
+
+# ---- test artifacts -------------------------------------------------
+test_platform_tmp.bin
+*.testlog
+*.testout
+
+# ---- logs and runtime output ----------------------------------------
+# Phase B will produce these on a real run.
+*.log
+events.jsonl
+events.jsonl.*
+gardener.log
+gardener.log.*
+log.bin
+log.bin.*
+log.idx
+
+# ---- baselines and persisted state ----------------------------------
+# Phase C will write these.
+baselines.bin
+baselines.bin.*
+*.tmp
+*.swp
+
+# ---- editor / IDE ---------------------------------------------------
+.vscode/
+.idea/
+*.code-workspace
+.cache/
+.clangd/
+*.kate-swp
+
+# ---- OS cruft -------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- misc -----------------------------------------------------------
+*.bak
+*.orig
+*.rej
+core
+core.*

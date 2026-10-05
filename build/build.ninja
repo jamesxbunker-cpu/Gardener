@@ -56,8 +56,6 @@ build CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj: C_COMPILER
   INCLUDES = -ID:/VS_Code/Gardener/include
   OBJECT_DIR = CMakeFiles\gardener_core.dir
   OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src\platform
-  TARGET_COMPILE_PDB = CMakeFiles\gardener_core.dir\gardener_core.pdb
-  TARGET_PDB = libgardener_core.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
 
 build CMakeFiles/gardener_core.dir/src/platform/log.c.obj: C_COMPILER__gardener_core_unscanned_Debug D$:/VS_Code/Gardener/src/platform/log.c || cmake_object_order_depends_target_gardener_core
@@ -67,8 +65,15 @@ build CMakeFiles/gardener_core.dir/src/platform/log.c.obj: C_COMPILER__gardener_
   INCLUDES = -ID:/VS_Code/Gardener/include
   OBJECT_DIR = CMakeFiles\gardener_core.dir
   OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src\platform
-  TARGET_COMPILE_PDB = CMakeFiles\gardener_core.dir\gardener_core.pdb
-  TARGET_PDB = libgardener_core.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
+
+build CMakeFiles/gardener_core.dir/src/ring.c.obj: C_COMPILER__gardener_core_unscanned_Debug D$:/VS_Code/Gardener/src/ring.c || cmake_object_order_depends_target_gardener_core
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\gardener_core.dir\src\ring.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\gardener_core.dir
+  OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
 
 
@@ -79,15 +84,14 @@ build CMakeFiles/gardener_core.dir/src/platform/log.c.obj: C_COMPILER__gardener_
 #############################################
 # Link the static library libgardener_core.a
 
-build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/platform/log.c.obj
+build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/platform/log.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj
   CONFIG = Debug
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles\gardener_core.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
-  TARGET_COMPILE_PDB = CMakeFiles\gardener_core.dir\gardener_core.pdb
   TARGET_FILE = libgardener_core.a
-  TARGET_PDB = libgardener_core.pdb
+  TARGET_PDB = gardener_core.a.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
 
 # =============================================================================
@@ -106,8 +110,6 @@ build CMakeFiles/gardener.dir/src/main.c.obj: C_COMPILER__gardener_unscanned_Deb
   INCLUDES = -ID:/VS_Code/Gardener/include
   OBJECT_DIR = CMakeFiles\gardener.dir
   OBJECT_FILE_DIR = CMakeFiles\gardener.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\gardener.dir\
-  TARGET_PDB = gardener.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\gardener.dir
 
 
@@ -125,10 +127,9 @@ build gardener.exe: C_EXECUTABLE_LINKER__gardener_Debug CMakeFiles/gardener.dir/
   OBJECT_DIR = CMakeFiles\gardener.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
-  TARGET_COMPILE_PDB = CMakeFiles\gardener.dir\
   TARGET_FILE = gardener.exe
   TARGET_IMPLIB = libgardener.dll.a
-  TARGET_PDB = gardener.pdb
+  TARGET_PDB = gardener.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\gardener.dir
 
 # =============================================================================
@@ -147,8 +148,6 @@ build CMakeFiles/test_platform.dir/tests/test_platform.c.obj: C_COMPILER__test_p
   INCLUDES = -ID:/VS_Code/Gardener/include
   OBJECT_DIR = CMakeFiles\test_platform.dir
   OBJECT_FILE_DIR = CMakeFiles\test_platform.dir\tests
-  TARGET_COMPILE_PDB = CMakeFiles\test_platform.dir\
-  TARGET_PDB = test_platform.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\test_platform.dir
 
 
@@ -166,11 +165,48 @@ build test_platform.exe: C_EXECUTABLE_LINKER__test_platform_Debug CMakeFiles/tes
   OBJECT_DIR = CMakeFiles\test_platform.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
-  TARGET_COMPILE_PDB = CMakeFiles\test_platform.dir\
   TARGET_FILE = test_platform.exe
   TARGET_IMPLIB = libtest_platform.dll.a
-  TARGET_PDB = test_platform.pdb
+  TARGET_PDB = test_platform.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_platform.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target test_ring
+
+
+#############################################
+# Order-only phony target for test_ring
+
+build cmake_object_order_depends_target_test_ring: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_ring.dir/tests/test_ring.c.obj: C_COMPILER__test_ring_unscanned_Debug D$:/VS_Code/Gardener/tests/test_ring.c || cmake_object_order_depends_target_test_ring
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_ring.dir\tests\test_ring.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_ring.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_ring.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_ring.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_ring
+
+
+#############################################
+# Link the executable test_ring.exe
+
+build test_ring.exe: C_EXECUTABLE_LINKER__test_ring_Debug CMakeFiles/test_ring.dir/tests/test_ring.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_ring.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_ring.exe
+  TARGET_IMPLIB = libtest_ring.dll.a
+  TARGET_PDB = test_ring.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_ring.dir
 
 
 #############################################
@@ -217,6 +253,8 @@ build gardener_core: phony libgardener_core.a
 
 build test_platform: phony test_platform.exe
 
+build test_ring: phony test_ring.exe
+
 # =============================================================================
 # Folder targets.
 
@@ -225,7 +263,7 @@ build test_platform: phony test_platform.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe test_platform.exe
+build all: phony libgardener_core.a gardener.exe test_platform.exe test_ring.exe
 
 # =============================================================================
 # Built-in targets
@@ -234,14 +272,14 @@ build all: phony libgardener_core.a gardener.exe test_platform.exe
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja D$:/VS_Code/Gardener/build/cmake_install.cmake D$:/VS_Code/Gardener/build/CTestTestfile.cmake: RERUN_CMAKE | CMakeCache.txt CMakeFiles/4.4.3/CMakeCCompiler.cmake CMakeFiles/4.4.3/CMakeRCCompiler.cmake CMakeFiles/4.4.3/CMakeSystem.cmake D$:/VS_Code/Gardener/CMakeLists.txt D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCCompiler.cmake.in D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCCompilerABI.c D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCommonLanguageInclude.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCompilerIdDetection.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineCCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineCompilerABI.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineCompilerId.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineCompilerSupport.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineRCCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineSystem.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeFindBinUtils.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeGenericSystem.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeInitializeConfigs.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeLanguageInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeNinjaFindMake.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeParseImplicitIncludeInfo.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeParseImplicitLinkInfo.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeParseLibraryArchitecture.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeRCCompiler.cmake.in D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeRCInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeSystem.cmake.in D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeSystemSpecificInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeSystemSpecificInitialize.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeTestCCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeTestCompilerCommon.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeTestRCCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/ADSP-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/ARMCC-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/ARMClang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/AppleClang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Borland-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Bruce-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/CMakeCommonCompilerMacros.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Clang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Clang-DetermineCompilerInternal.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Compaq-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Cray-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/CrayClang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Diab-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Embarcadero-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Fujitsu-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GHS-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU-FindBinUtils.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/HP-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/IAR-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/IBMCPP-C-DetermineVersionInternal.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/IBMClang-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Intel-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/LCC-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/MSVC-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/NVHPC-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/NVIDIA-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/OrangeC-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/PGI-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/PathScale-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/PellesC-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Renesas-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/SCO-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/SDCC-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/SunPro-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/TI-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/TIClang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Tasking-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/TinyCC-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/VisualAge-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Watcom-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/XL-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/XLClang-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/zOS-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeCLinkerInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeCommonLinkerInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeDetermineLinkerId.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeInspectCLinker.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/FeatureTesting.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Linker/GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Linker/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/Windows-GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/Windows-GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU-C-ABI.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-Initialize.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-windres.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/WindowsPaths.cmake
+build build.ninja D$:/VS_Code/Gardener/build/cmake_install.cmake D$:/VS_Code/Gardener/build/CTestTestfile.cmake: RERUN_CMAKE | CMakeCache.txt CMakeFiles/4.4.3/CMakeCCompiler.cmake CMakeFiles/4.4.3/CMakeRCCompiler.cmake CMakeFiles/4.4.3/CMakeSystem.cmake D$:/VS_Code/Gardener/CMakeLists.txt D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCommonLanguageInclude.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeGenericSystem.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeInitializeConfigs.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeLanguageInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeRCInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeSystemSpecificInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeSystemSpecificInitialize.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/CMakeCommonCompilerMacros.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeCLinkerInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeCommonLinkerInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Linker/GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Linker/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/Windows-GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/Windows-GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU-C-ABI.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-Initialize.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-windres.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/WindowsPaths.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build CMakeCache.txt CMakeFiles/4.4.3/CMakeCCompiler.cmake CMakeFiles/4.4.3/CMakeRCCompiler.cmake CMakeFiles/4.4.3/CMakeSystem.cmake D$:/VS_Code/Gardener/CMakeLists.txt D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCCompiler.cmake.in D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCCompilerABI.c D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCommonLanguageInclude.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCompilerIdDetection.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineCCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineCompilerABI.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineCompilerId.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineCompilerSupport.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineRCCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeDetermineSystem.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeFindBinUtils.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeGenericSystem.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeInitializeConfigs.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeLanguageInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeNinjaFindMake.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeParseImplicitIncludeInfo.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeParseImplicitLinkInfo.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeParseLibraryArchitecture.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeRCCompiler.cmake.in D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeRCInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeSystem.cmake.in D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeSystemSpecificInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeSystemSpecificInitialize.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeTestCCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeTestCompilerCommon.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeTestRCCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/ADSP-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/ARMCC-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/ARMClang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/AppleClang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Borland-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Bruce-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/CMakeCommonCompilerMacros.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Clang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Clang-DetermineCompilerInternal.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Compaq-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Cray-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/CrayClang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Diab-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Embarcadero-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Fujitsu-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GHS-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU-FindBinUtils.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/HP-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/IAR-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/IBMCPP-C-DetermineVersionInternal.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/IBMClang-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Intel-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/LCC-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/MSVC-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/NVHPC-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/NVIDIA-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/OrangeC-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/PGI-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/PathScale-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/PellesC-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Renesas-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/SCO-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/SDCC-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/SunPro-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/TI-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/TIClang-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Tasking-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/TinyCC-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/VisualAge-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/Watcom-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/XL-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/XLClang-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/zOS-C-DetermineCompiler.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeCLinkerInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeCommonLinkerInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeDetermineLinkerId.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeInspectCLinker.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/FeatureTesting.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Linker/GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Linker/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/Windows-GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/Windows-GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU-C-ABI.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-Initialize.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-windres.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/WindowsPaths.cmake: phony
+build CMakeCache.txt CMakeFiles/4.4.3/CMakeCCompiler.cmake CMakeFiles/4.4.3/CMakeRCCompiler.cmake CMakeFiles/4.4.3/CMakeSystem.cmake D$:/VS_Code/Gardener/CMakeLists.txt D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeCommonLanguageInclude.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeGenericSystem.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeInitializeConfigs.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeLanguageInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeRCInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeSystemSpecificInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/CMakeSystemSpecificInitialize.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/CMakeCommonCompilerMacros.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Compiler/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeCLinkerInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Internal/CMakeCommonLinkerInformation.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Linker/GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Linker/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/Windows-GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Linker/Windows-GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU-C-ABI.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU-C.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-GNU.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-Initialize.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows-windres.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/Windows.cmake D$:/w64devkit/w64devkit/share/cmake-4.4/Modules/Platform/WindowsPaths.cmake: phony
 
 
 #############################################
