@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/VS_Code/Gardener/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
