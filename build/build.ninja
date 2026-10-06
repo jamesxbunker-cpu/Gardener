@@ -416,6 +416,44 @@ build test_packet_bin.exe: C_EXECUTABLE_LINKER__test_packet_bin_Debug CMakeFiles
   TARGET_PDB = test_packet_bin.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_packet_bin.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_log_format
+
+
+#############################################
+# Order-only phony target for test_log_format
+
+build cmake_object_order_depends_target_test_log_format: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_log_format.dir/tests/test_log_format.c.obj: C_COMPILER__test_log_format_unscanned_Debug D$:/VS_Code/Gardener/tests/test_log_format.c || cmake_object_order_depends_target_test_log_format
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_log_format.dir\tests\test_log_format.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_log_format.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_log_format.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_log_format.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_log_format
+
+
+#############################################
+# Link the executable test_log_format.exe
+
+build test_log_format.exe: C_EXECUTABLE_LINKER__test_log_format_Debug CMakeFiles/test_log_format.dir/tests/test_log_format.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_log_format.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_log_format.exe
+  TARGET_IMPLIB = libtest_log_format.dll.a
+  TARGET_PDB = test_log_format.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_log_format.dir
+
 
 #############################################
 # Utility command for test
@@ -463,6 +501,8 @@ build gardener_core: phony libgardener_core.a
 
 build test_ingest: phony test_ingest.exe
 
+build test_log_format: phony test_log_format.exe
+
 build test_packet_bin: phony test_packet_bin.exe
 
 build test_packet_json: phony test_packet_json.exe
@@ -481,7 +521,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe
 
 # =============================================================================
 # Built-in targets
