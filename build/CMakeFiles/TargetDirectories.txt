@@ -8,6 +8,7 @@ D:/VS_Code/Gardener/build/CMakeFiles/test_ingest.dir
 D:/VS_Code/Gardener/build/CMakeFiles/test_packet_json.dir
 D:/VS_Code/Gardener/build/CMakeFiles/test_packet_bin.dir
 D:/VS_Code/Gardener/build/CMakeFiles/test_log_format.dir
+D:/VS_Code/Gardener/build/CMakeFiles/test_log_writer.dir
 D:/VS_Code/Gardener/build/CMakeFiles/test.dir
 D:/VS_Code/Gardener/build/CMakeFiles/edit_cache.dir
 D:/VS_Code/Gardener/build/CMakeFiles/rebuild_cache.dir

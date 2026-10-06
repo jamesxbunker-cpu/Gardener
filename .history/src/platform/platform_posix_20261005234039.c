@@ -52,23 +52,16 @@ struct plat_file {
     FILE *fp;
 };
 
-plat_file_t *plat_file_open(const char *path, plat_file_mode_t mode) {
+plat_file_t *plat_file_open(const char *path, int for_write) {
     if (!path) return NULL;
-    const char *mode_str;
-    switch (mode) {
-        case PLAT_FILE_READ:   mode_str = "rb";  break;
-        case PLAT_FILE_WRITE:  mode_str = "wb";  break;
-        case PLAT_FILE_UPDATE: mode_str = "r+b"; break;
-        default: return NULL;
-    }
-    FILE *fp = fopen(path, mode_str);
-    if (!fp && mode == PLAT_FILE_UPDATE) {
-        /* r+b requires the file to exist; create if missing. */
-        fp = fopen(path, "w+b");
-    }
+    FILE *fp = fopen(path, for_write ? "wb" : "rb");
     if (!fp) return NULL;
-    plat_file_t *f = malloc(sizeof(*f));
-    if (!f) { fclose(fp); return NULL; }
+
+    plat_file_t *f = (plat_file_t *)malloc(sizeof(*f));
+    if (!f) {
+        fclose(fp);
+        return NULL;
+    }
     f->fp = fp;
     return f;
 }

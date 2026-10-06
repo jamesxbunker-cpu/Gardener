@@ -36,18 +36,9 @@ void plat_sleep_ms(unsigned ms);
 
 typedef struct plat_file plat_file_t;
 
-/* Open modes.
- *   PLAT_FILE_READ   — "rb", read-only, file must exist
- *   PLAT_FILE_WRITE  — "wb", write-only, truncates or creates
- *   PLAT_FILE_UPDATE — "r+b", read+write, does not truncate, creates
- *                      if missing */
-typedef enum {
-    PLAT_FILE_READ   = 0,
-    PLAT_FILE_WRITE  = 1,
-    PLAT_FILE_UPDATE = 2,
-} plat_file_mode_t;
+/* Open a file for reading (for_write=0) or writing (for_write=1).
+ * Writing truncates any existing file. Returns NULL on failure. */
 
-/* Open a file. Returns NULL on failure. */
 plat_file_t *plat_file_open(const char *path, plat_file_mode_t mode);
 
 /* Read up to len bytes; returns bytes read, 0 on EOF, -1 on error. */
@@ -55,13 +46,6 @@ int plat_file_read(plat_file_t *f, void *buf, size_t len);
 
 /* Write len bytes; returns bytes written, -1 on error. */
 int plat_file_write(plat_file_t *f, const void *buf, size_t len);
-
-/* Seek to an absolute byte offset. Returns 0 on success, -1 on
- * failure. The offset is limited to the platform's off_t range. */
-int plat_file_seek(plat_file_t *f, uint64_t offset);
-
-/* Current byte offset, or (uint64_t)-1 on error. */
-uint64_t plat_file_tell(plat_file_t *f);
 
 /* Flush to the OS. Does not guarantee physical media write; that's
  * platform-specific and costs more than we want per-sample. */

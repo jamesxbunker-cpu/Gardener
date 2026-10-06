@@ -18,7 +18,6 @@ add_library(gardener_core STATIC
     src/registry.c
     src/ingest.c
     src/packet.c                      # A4
-    src/log_writer.c                  # B1
 )
 target_include_directories(gardener_core PUBLIC include)
 
@@ -62,6 +61,10 @@ add_executable(test_log_format tests/test_log_format.c)
 target_link_libraries(test_log_format PRIVATE gardener_core)
 add_test(NAME log_format COMMAND test_log_format)
 
-add_executable(test_log_writer tests/test_log_writer.c)     # B1
+add_executable(test_log_format tests/test_log_format.c)
+target_link_libraries(test_log_format PRIVATE gardener_core)
+add_test(NAME log_format COMMAND test_log_format)
+
+add_executable(test_log_writer tests/test_log_writer.c)
 target_link_libraries(test_log_writer PRIVATE gardener_core)
 add_test(NAME log_writer COMMAND test_log_writer)

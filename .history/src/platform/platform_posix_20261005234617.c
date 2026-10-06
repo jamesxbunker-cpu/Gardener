@@ -52,7 +52,7 @@ struct plat_file {
     FILE *fp;
 };
 
-plat_file_t *plat_file_open(const char *path, plat_file_mode_t mode) {
+plat_file_t *plat_file_open(const char *path, plat_file_t mode) {
     if (!path) return NULL;
     const char *mode_str;
     switch (mode) {
