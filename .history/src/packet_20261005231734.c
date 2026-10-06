@@ -461,9 +461,7 @@ int packet_from_json(const char *line, packet_t *out) {
  * sample_t is 24 bytes natural-aligned, packed is 18. This lets the
  * struct stay fast to access in memory while keeping the wire compact.
  * ------------------------------------------------------------------- */
-/* CRC-16/MODBUS. Polynomial 0x8005 reflected as 0xA001, init 0xFFFF,
- * refin=true, refout=true, xorout=0x0000. Check value of "123456789"
- * is 0x4B37. Same CRC as Modbus RTU, which is why we use it. */
+
 uint16_t packet_crc16(const uint8_t *data, size_t len) {
     uint16_t crc = 0xFFFF;
     for (size_t i = 0; i < len; i++) {
@@ -604,8 +602,5 @@ int packet_decode(const uint8_t *buf, size_t len, packet_t *out) {
         s->timestamp_ns = get_u64(i);   i += 8;
     }
 
-    /* `i` now points at the CRC. We've already verified it above.
-     * Return the total packet size including the trailer, so a caller
-     * can advance past it in a concatenated stream. */
-    return (int)need;
+    return (int)(i - buf);   /* = need, no trailer consumed */
 }

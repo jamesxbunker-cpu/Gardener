@@ -378,6 +378,44 @@ build test_packet_json.exe: C_EXECUTABLE_LINKER__test_packet_json_Debug CMakeFil
   TARGET_PDB = test_packet_json.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_packet_json.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_packet_bin
+
+
+#############################################
+# Order-only phony target for test_packet_bin
+
+build cmake_object_order_depends_target_test_packet_bin: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_packet_bin.dir/tests/test_packet_bin.c.obj: C_COMPILER__test_packet_bin_unscanned_Debug D$:/VS_Code/Gardener/tests/test_packet_bin.c || cmake_object_order_depends_target_test_packet_bin
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_packet_bin.dir\tests\test_packet_bin.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_packet_bin.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_packet_bin.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_packet_bin.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_packet_bin
+
+
+#############################################
+# Link the executable test_packet_bin.exe
+
+build test_packet_bin.exe: C_EXECUTABLE_LINKER__test_packet_bin_Debug CMakeFiles/test_packet_bin.dir/tests/test_packet_bin.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lm  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_packet_bin.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_packet_bin.exe
+  TARGET_IMPLIB = libtest_packet_bin.dll.a
+  TARGET_PDB = test_packet_bin.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_packet_bin.dir
+
 
 #############################################
 # Utility command for test
@@ -425,6 +463,8 @@ build gardener_core: phony libgardener_core.a
 
 build test_ingest: phony test_ingest.exe
 
+build test_packet_bin: phony test_packet_bin.exe
+
 build test_packet_json: phony test_packet_json.exe
 
 build test_platform: phony test_platform.exe
@@ -441,7 +481,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe
 
 # =============================================================================
 # Built-in targets
