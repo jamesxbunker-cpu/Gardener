@@ -85,6 +85,15 @@ build CMakeFiles/gardener_core.dir/src/ingest.c.obj: C_COMPILER__gardener_core_u
   OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
 
+build CMakeFiles/gardener_core.dir/src/packet.c.obj: C_COMPILER__gardener_core_unscanned_Debug D$:/VS_Code/Gardener/src/packet.c || cmake_object_order_depends_target_gardener_core
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\gardener_core.dir\src\packet.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\gardener_core.dir
+  OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src
+  TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
+
 
 # =============================================================================
 # Link build statements for STATIC_LIBRARY target gardener_core
@@ -93,7 +102,7 @@ build CMakeFiles/gardener_core.dir/src/ingest.c.obj: C_COMPILER__gardener_core_u
 #############################################
 # Link the static library libgardener_core.a
 
-build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj CMakeFiles/gardener_core.dir/src/registry.c.obj CMakeFiles/gardener_core.dir/src/ingest.c.obj
+build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj CMakeFiles/gardener_core.dir/src/registry.c.obj CMakeFiles/gardener_core.dir/src/ingest.c.obj CMakeFiles/gardener_core.dir/src/packet.c.obj
   CONFIG = Debug
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles\gardener_core.dir
@@ -132,7 +141,7 @@ build CMakeFiles/gardener.dir/src/main.c.obj: C_COMPILER__gardener_unscanned_Deb
 build gardener.exe: C_EXECUTABLE_LINKER__gardener_Debug CMakeFiles/gardener.dir/src/main.c.obj | libgardener_core.a || libgardener_core.a
   CONFIG = Debug
   FLAGS = -g
-  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  LINK_LIBRARIES = libgardener_core.a  -lm  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\gardener.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
@@ -331,6 +340,44 @@ build test_ingest.exe: C_EXECUTABLE_LINKER__test_ingest_Debug CMakeFiles/test_in
   TARGET_PDB = test_ingest.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_ingest.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_packet_json
+
+
+#############################################
+# Order-only phony target for test_packet_json
+
+build cmake_object_order_depends_target_test_packet_json: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_packet_json.dir/tests/test_packet_json.c.obj: C_COMPILER__test_packet_json_unscanned_Debug D$:/VS_Code/Gardener/tests/test_packet_json.c || cmake_object_order_depends_target_test_packet_json
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_packet_json.dir\tests\test_packet_json.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_packet_json.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_packet_json.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_packet_json.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_packet_json
+
+
+#############################################
+# Link the executable test_packet_json.exe
+
+build test_packet_json.exe: C_EXECUTABLE_LINKER__test_packet_json_Debug CMakeFiles/test_packet_json.dir/tests/test_packet_json.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lm  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_packet_json.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_packet_json.exe
+  TARGET_IMPLIB = libtest_packet_json.dll.a
+  TARGET_PDB = test_packet_json.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_packet_json.dir
+
 
 #############################################
 # Utility command for test
@@ -378,6 +425,8 @@ build gardener_core: phony libgardener_core.a
 
 build test_ingest: phony test_ingest.exe
 
+build test_packet_json: phony test_packet_json.exe
+
 build test_platform: phony test_platform.exe
 
 build test_registry: phony test_registry.exe
@@ -392,7 +441,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe
 
 # =============================================================================
 # Built-in targets
