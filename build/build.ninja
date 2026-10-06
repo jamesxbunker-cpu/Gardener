@@ -58,18 +58,18 @@ build CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj: C_COMPILER
   OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src\platform
   TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
 
-build CMakeFiles/gardener_core.dir/src/platform/log.c.obj: C_COMPILER__gardener_core_unscanned_Debug D$:/VS_Code/Gardener/src/platform/log.c || cmake_object_order_depends_target_gardener_core
-  CONFIG = Debug
-  DEP_FILE = CMakeFiles\gardener_core.dir\src\platform\log.c.obj.d
-  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
-  INCLUDES = -ID:/VS_Code/Gardener/include
-  OBJECT_DIR = CMakeFiles\gardener_core.dir
-  OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src\platform
-  TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
-
 build CMakeFiles/gardener_core.dir/src/ring.c.obj: C_COMPILER__gardener_core_unscanned_Debug D$:/VS_Code/Gardener/src/ring.c || cmake_object_order_depends_target_gardener_core
   CONFIG = Debug
   DEP_FILE = CMakeFiles\gardener_core.dir\src\ring.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\gardener_core.dir
+  OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src
+  TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
+
+build CMakeFiles/gardener_core.dir/src/registry.c.obj: C_COMPILER__gardener_core_unscanned_Debug D$:/VS_Code/Gardener/src/registry.c || cmake_object_order_depends_target_gardener_core
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\gardener_core.dir\src\registry.c.obj.d
   FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
   INCLUDES = -ID:/VS_Code/Gardener/include
   OBJECT_DIR = CMakeFiles\gardener_core.dir
@@ -84,7 +84,7 @@ build CMakeFiles/gardener_core.dir/src/ring.c.obj: C_COMPILER__gardener_core_uns
 #############################################
 # Link the static library libgardener_core.a
 
-build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/platform/log.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj
+build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj CMakeFiles/gardener_core.dir/src/registry.c.obj
   CONFIG = Debug
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles\gardener_core.dir
@@ -131,6 +131,44 @@ build gardener.exe: C_EXECUTABLE_LINKER__gardener_Debug CMakeFiles/gardener.dir/
   TARGET_IMPLIB = libgardener.dll.a
   TARGET_PDB = gardener.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\gardener.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target gardener-dump
+
+
+#############################################
+# Order-only phony target for gardener-dump
+
+build cmake_object_order_depends_target_gardener-dump: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/gardener-dump.dir/src/tools/gardener_dump.c.obj: C_COMPILER__gardener-dump_unscanned_Debug D$:/VS_Code/Gardener/src/tools/gardener_dump.c || cmake_object_order_depends_target_gardener-dump
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\gardener-dump.dir\src\tools\gardener_dump.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\gardener-dump.dir
+  OBJECT_FILE_DIR = CMakeFiles\gardener-dump.dir\src\tools
+  TARGET_SUPPORT_DIR = CMakeFiles\gardener-dump.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target gardener-dump
+
+
+#############################################
+# Link the executable gardener-dump.exe
+
+build gardener-dump.exe: C_EXECUTABLE_LINKER__gardener-dump_Debug CMakeFiles/gardener-dump.dir/src/tools/gardener_dump.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\gardener-dump.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = gardener-dump.exe
+  TARGET_IMPLIB = libgardener-dump.dll.a
+  TARGET_PDB = gardener-dump.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\gardener-dump.dir
 
 # =============================================================================
 # Object build statements for EXECUTABLE target test_platform
@@ -208,6 +246,44 @@ build test_ring.exe: C_EXECUTABLE_LINKER__test_ring_Debug CMakeFiles/test_ring.d
   TARGET_PDB = test_ring.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_ring.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_registry
+
+
+#############################################
+# Order-only phony target for test_registry
+
+build cmake_object_order_depends_target_test_registry: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_registry.dir/tests/test_registry.c.obj: C_COMPILER__test_registry_unscanned_Debug D$:/VS_Code/Gardener/tests/test_registry.c || cmake_object_order_depends_target_test_registry
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_registry.dir\tests\test_registry.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_registry.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_registry.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_registry.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_registry
+
+
+#############################################
+# Link the executable test_registry.exe
+
+build test_registry.exe: C_EXECUTABLE_LINKER__test_registry_Debug CMakeFiles/test_registry.dir/tests/test_registry.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_registry.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_registry.exe
+  TARGET_IMPLIB = libtest_registry.dll.a
+  TARGET_PDB = test_registry.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_registry.dir
+
 
 #############################################
 # Utility command for test
@@ -249,9 +325,13 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 
 build gardener: phony gardener.exe
 
+build gardener-dump: phony gardener-dump.exe
+
 build gardener_core: phony libgardener_core.a
 
 build test_platform: phony test_platform.exe
+
+build test_registry: phony test_registry.exe
 
 build test_ring: phony test_ring.exe
 
@@ -263,7 +343,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe test_platform.exe test_ring.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe test_platform.exe test_ring.exe test_registry.exe
 
 # =============================================================================
 # Built-in targets

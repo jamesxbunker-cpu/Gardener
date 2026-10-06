@@ -1,0 +1,96 @@
+# Gardener channel registry.
+#
+# One [[channel]] block per signal. The id is what appears on the wire and
+# in the ingest ring; the name is for humans and logs. Nothing here is
+# hardcoded in the binary — Gardener works with any channel table that
+# matches this shape.
+#
+# Fields:
+#   id           required, 0..65535
+#   name         required, <= 31 chars
+#   unit         optional, <= 15 chars
+#   type         f32 | i32 | u16 | bool | enum  (default f32)
+#   role         sensor | setpoint | ctrl_out | actuator | status | counter
+#   min, max     optional, sanity range for the range-check detector
+#   controllable true | false (default false) — may gardener write to it?
+#   is_regime    true | false (default false) — regime selector for baselines
+
+# -- sensors ----------------------------------------------------------
+
+[[channel]]
+id           = 1
+name         = "coolant_temp"
+unit         = "C"
+type         = "f32"
+role         = "sensor"
+min          = 0
+max          = 150
+
+[[channel]]
+id           = 2
+name         = "coolant_flow"
+unit         = "L/min"
+type         = "f32"
+role         = "sensor"
+min          = 0
+max          = 40
+
+[[channel]]
+id           = 3
+name         = "ambient_temp"
+unit         = "C"
+type         = "f32"
+role         = "sensor"
+min          = -40
+max          = 80
+
+# -- setpoint and controller internals --------------------------------
+
+[[channel]]
+id           = 10
+name         = "coolant_setpoint"
+unit         = "C"
+type         = "f32"
+role         = "setpoint"
+min          = 0
+max          = 120
+
+[[channel]]
+id           = 11
+name         = "coolant_pid_out"
+unit         = "%"
+type         = "f32"
+role         = "ctrl_out"
+min          = 0
+max          = 100
+
+# -- actuator ---------------------------------------------------------
+
+[[channel]]
+id           = 20
+name         = "coolant_pump"
+unit         = "%"
+type         = "f32"
+role         = "actuator"
+min          = 0
+max          = 100
+controllable = true
+
+# -- status and regime ------------------------------------------------
+
+[[channel]]
+id           = 30
+name         = "running"
+unit         = ""
+type         = "bool"
+role         = "status"
+is_regime    = true
+
+[[channel]]
+id           = 31
+name         = "fault_code"
+unit         = ""
+type         = "u16"
+role         = "status"
+min          = 0
+max          = 65535
