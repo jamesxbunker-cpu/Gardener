@@ -1,0 +1,18 @@
+# Simulates a target whose link drops for a few seconds, then recovers,
+# twice. The receiving side should see gaps in the packet stream.
+#
+# Run with:
+#   python tools/gensim/gensim.py --scenario tools/gensim/scenarios/link_flap.yaml
+
+name: link_flap
+plant: hvac
+duration: 120
+
+events:
+  - at: 30
+    action: link_gap
+    duration: 5
+
+  - at: 90
+    action: link_gap
+    duration: 8

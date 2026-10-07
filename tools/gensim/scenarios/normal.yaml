@@ -1,0 +1,11 @@
+# Normal operation: no faults, generic plant, 10 minutes.
+#
+# Run with:
+#   python tools/gensim/gensim.py --scenario tools/gensim/scenarios/normal.yaml
+
+name: normal
+plant: generic
+duration: 600
+
+# No events. Channels oscillate on their own sine + noise.
+events: []

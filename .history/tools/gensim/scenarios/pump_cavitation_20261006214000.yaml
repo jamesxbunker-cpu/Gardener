@@ -1,0 +1,31 @@
+# Pump duty gets a pair of sharp spikes, characteristic of cavitation.
+# Also freezes the flow sensor briefly, which should show up as a
+# flatline in the flow channel.
+#
+# Run with:
+#   python tools/gensim/gensim.py --scenario tools/gensim/scenarios/pump_cavitation.yaml
+
+name: pump_cavitation
+plant: hvac
+duration: 300
+
+events:
+  - at: 60
+    action: spike
+    ch: coolant_pump
+    offset: 30
+    duration: 2
+
+  - at: 120
+    action: spike
+    ch: coolant_pump
+    offset: 25
+    duration: 3
+
+  - at: 180
+    action: freeze
+    ch: coolant_flow
+
+  - at: 240
+    action: unfreeze
+    ch: coolant_flow

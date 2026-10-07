@@ -1,0 +1,16 @@
+# Coolant temperature slowly drifts upward starting at 60s, at a rate
+# of 0.05 C/s. Over 5 minutes that's +15 C, enough to trip a z-score
+# detector once phase D is in.
+#
+# Run with:
+#   python tools/gensim/gensim.py --scenario tools/gensim/scenarios/sensor_drift.yaml
+
+name: sensor_drift
+plant: hvac
+duration: 300
+
+events:
+  - at: 60
+    action: drift
+    ch: coolant_temp
+    rate: 0.05

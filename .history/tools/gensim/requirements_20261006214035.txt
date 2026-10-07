@@ -1,0 +1,2 @@
+# Optional. gensim works without PyYAML using a subset parser.
+PyYAML>=5.0
