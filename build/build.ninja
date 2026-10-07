@@ -103,6 +103,15 @@ build CMakeFiles/gardener_core.dir/src/log_writer.c.obj: C_COMPILER__gardener_co
   OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
 
+build CMakeFiles/gardener_core.dir/src/log_reader.c.obj: C_COMPILER__gardener_core_unscanned_Debug D$:/VS_Code/Gardener/src/log_reader.c || cmake_object_order_depends_target_gardener_core
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\gardener_core.dir\src\log_reader.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\gardener_core.dir
+  OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src
+  TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
+
 
 # =============================================================================
 # Link build statements for STATIC_LIBRARY target gardener_core
@@ -111,7 +120,7 @@ build CMakeFiles/gardener_core.dir/src/log_writer.c.obj: C_COMPILER__gardener_co
 #############################################
 # Link the static library libgardener_core.a
 
-build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj CMakeFiles/gardener_core.dir/src/registry.c.obj CMakeFiles/gardener_core.dir/src/ingest.c.obj CMakeFiles/gardener_core.dir/src/packet.c.obj CMakeFiles/gardener_core.dir/src/log_writer.c.obj
+build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj CMakeFiles/gardener_core.dir/src/registry.c.obj CMakeFiles/gardener_core.dir/src/ingest.c.obj CMakeFiles/gardener_core.dir/src/packet.c.obj CMakeFiles/gardener_core.dir/src/log_writer.c.obj CMakeFiles/gardener_core.dir/src/log_reader.c.obj
   CONFIG = Debug
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles\gardener_core.dir
@@ -168,13 +177,13 @@ build gardener.exe: C_EXECUTABLE_LINKER__gardener_Debug CMakeFiles/gardener.dir/
 
 build cmake_object_order_depends_target_gardener-dump: phony || cmake_object_order_depends_target_gardener_core
 
-build CMakeFiles/gardener-dump.dir/src/tools/gardener_dump.c.obj: C_COMPILER__gardener-dump_unscanned_Debug D$:/VS_Code/Gardener/src/tools/gardener_dump.c || cmake_object_order_depends_target_gardener-dump
+build CMakeFiles/gardener-dump.dir/tools/gardener_dump.c.obj: C_COMPILER__gardener-dump_unscanned_Debug D$:/VS_Code/Gardener/tools/gardener_dump.c || cmake_object_order_depends_target_gardener-dump
   CONFIG = Debug
-  DEP_FILE = CMakeFiles\gardener-dump.dir\src\tools\gardener_dump.c.obj.d
+  DEP_FILE = CMakeFiles\gardener-dump.dir\tools\gardener_dump.c.obj.d
   FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
   INCLUDES = -ID:/VS_Code/Gardener/include
   OBJECT_DIR = CMakeFiles\gardener-dump.dir
-  OBJECT_FILE_DIR = CMakeFiles\gardener-dump.dir\src\tools
+  OBJECT_FILE_DIR = CMakeFiles\gardener-dump.dir\tools
   TARGET_SUPPORT_DIR = CMakeFiles\gardener-dump.dir
 
 
@@ -185,7 +194,7 @@ build CMakeFiles/gardener-dump.dir/src/tools/gardener_dump.c.obj: C_COMPILER__ga
 #############################################
 # Link the executable gardener-dump.exe
 
-build gardener-dump.exe: C_EXECUTABLE_LINKER__gardener-dump_Debug CMakeFiles/gardener-dump.dir/src/tools/gardener_dump.c.obj | libgardener_core.a || libgardener_core.a
+build gardener-dump.exe: C_EXECUTABLE_LINKER__gardener-dump_Debug CMakeFiles/gardener-dump.dir/tools/gardener_dump.c.obj | libgardener_core.a || libgardener_core.a
   CONFIG = Debug
   FLAGS = -g
   LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
@@ -196,6 +205,44 @@ build gardener-dump.exe: C_EXECUTABLE_LINKER__gardener-dump_Debug CMakeFiles/gar
   TARGET_IMPLIB = libgardener-dump.dll.a
   TARGET_PDB = gardener-dump.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\gardener-dump.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target gardener-log
+
+
+#############################################
+# Order-only phony target for gardener-log
+
+build cmake_object_order_depends_target_gardener-log: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/gardener-log.dir/tools/gardener_log.c.obj: C_COMPILER__gardener-log_unscanned_Debug D$:/VS_Code/Gardener/tools/gardener_log.c || cmake_object_order_depends_target_gardener-log
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\gardener-log.dir\tools\gardener_log.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\gardener-log.dir
+  OBJECT_FILE_DIR = CMakeFiles\gardener-log.dir\tools
+  TARGET_SUPPORT_DIR = CMakeFiles\gardener-log.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target gardener-log
+
+
+#############################################
+# Link the executable gardener-log.exe
+
+build gardener-log.exe: C_EXECUTABLE_LINKER__gardener-log_Debug CMakeFiles/gardener-log.dir/tools/gardener_log.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\gardener-log.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = gardener-log.exe
+  TARGET_IMPLIB = libgardener-log.dll.a
+  TARGET_PDB = gardener-log.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\gardener-log.dir
 
 # =============================================================================
 # Object build statements for EXECUTABLE target test_platform
@@ -501,6 +548,44 @@ build test_log_writer.exe: C_EXECUTABLE_LINKER__test_log_writer_Debug CMakeFiles
   TARGET_PDB = test_log_writer.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_log_writer.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_log_reader
+
+
+#############################################
+# Order-only phony target for test_log_reader
+
+build cmake_object_order_depends_target_test_log_reader: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_log_reader.dir/tests/test_log_reader.c.obj: C_COMPILER__test_log_reader_unscanned_Debug D$:/VS_Code/Gardener/tests/test_log_reader.c || cmake_object_order_depends_target_test_log_reader
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_log_reader.dir\tests\test_log_reader.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_log_reader.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_log_reader.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_log_reader.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_log_reader
+
+
+#############################################
+# Link the executable test_log_reader.exe
+
+build test_log_reader.exe: C_EXECUTABLE_LINKER__test_log_reader_Debug CMakeFiles/test_log_reader.dir/tests/test_log_reader.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_log_reader.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_log_reader.exe
+  TARGET_IMPLIB = libtest_log_reader.dll.a
+  TARGET_PDB = test_log_reader.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_log_reader.dir
+
 
 #############################################
 # Utility command for test
@@ -544,11 +629,15 @@ build gardener: phony gardener.exe
 
 build gardener-dump: phony gardener-dump.exe
 
+build gardener-log: phony gardener-log.exe
+
 build gardener_core: phony libgardener_core.a
 
 build test_ingest: phony test_ingest.exe
 
 build test_log_format: phony test_log_format.exe
+
+build test_log_reader: phony test_log_reader.exe
 
 build test_log_writer: phony test_log_writer.exe
 
@@ -570,7 +659,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe
 
 # =============================================================================
 # Built-in targets

@@ -29,11 +29,8 @@ target_link_libraries(gardener PRIVATE gardener_core)
 target_link_libraries(gardener PRIVATE m)       # strtod, isfinite
 
 # ---- tools ----------------------------------------------------------
-add_executable(gardener-dump tools/gardener_dump.c)
+add_executable(gardener-dump src/tools/gardener_dump.c)
 target_link_libraries(gardener-dump PRIVATE gardener_core)
-
-add_executable(gardener-log tools/gardener_log.c)
-target_link_libraries(gardener-log PRIVATE gardener_core)
 
 # ---- tests ----------------------------------------------------------
 enable_testing()
@@ -70,6 +67,5 @@ add_executable(test_log_writer tests/test_log_writer.c)     # B1
 target_link_libraries(test_log_writer PRIVATE gardener_core)
 add_test(NAME log_writer COMMAND test_log_writer)
 
-add_executable(test_log_reader tests/test_log_reader.c)
-target_link_libraries(test_log_reader PRIVATE gardener_core)
-add_test(NAME log_reader COMMAND test_log_reader)
+add_executable(gardener-log src/tools/gardener_log.c)  # B2
+target_link_libraries(gardener-log PRIVATE gardener_core)

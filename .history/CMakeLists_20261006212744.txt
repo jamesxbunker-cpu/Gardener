@@ -29,10 +29,10 @@ target_link_libraries(gardener PRIVATE gardener_core)
 target_link_libraries(gardener PRIVATE m)       # strtod, isfinite
 
 # ---- tools ----------------------------------------------------------
-add_executable(gardener-dump tools/gardener_dump.c)
+add_executable(gardener-dump src/tools/gardener_dump.c)
 target_link_libraries(gardener-dump PRIVATE gardener_core)
 
-add_executable(gardener-log tools/gardener_log.c)
+add_executable(gardener-log src/tools/gardener_log.c)  # B2
 target_link_libraries(gardener-log PRIVATE gardener_core)
 
 # ---- tests ----------------------------------------------------------
