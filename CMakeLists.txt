@@ -19,11 +19,12 @@ add_library(gardener_core STATIC
     src/ingest.c
     src/packet.c
     src/log_writer.c
-    src/log_reader.c                  # B2
+    src/log_reader.c                  
+    src/replay.c
 )
 target_include_directories(gardener_core PUBLIC include)
 
-# ---- gardner executable ---------------------------------------------
+# ---- gardener executable ---------------------------------------------
 add_executable(gardener src/main.c)
 target_link_libraries(gardener PRIVATE gardener_core)
 target_link_libraries(gardener PRIVATE m)       # strtod, isfinite
@@ -73,3 +74,7 @@ add_test(NAME log_writer COMMAND test_log_writer)
 add_executable(test_log_reader tests/test_log_reader.c)
 target_link_libraries(test_log_reader PRIVATE gardener_core)
 add_test(NAME log_reader COMMAND test_log_reader)
+
+add_executable(test_replay tests/test_replay.c)     # B4
+target_link_libraries(test_replay PRIVATE gardener_core)
+add_test(NAME replay COMMAND test_replay)

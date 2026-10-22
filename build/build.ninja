@@ -112,6 +112,15 @@ build CMakeFiles/gardener_core.dir/src/log_reader.c.obj: C_COMPILER__gardener_co
   OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
 
+build CMakeFiles/gardener_core.dir/src/replay.c.obj: C_COMPILER__gardener_core_unscanned_Debug D$:/VS_Code/Gardener/src/replay.c || cmake_object_order_depends_target_gardener_core
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\gardener_core.dir\src\replay.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\gardener_core.dir
+  OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src
+  TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
+
 
 # =============================================================================
 # Link build statements for STATIC_LIBRARY target gardener_core
@@ -120,7 +129,7 @@ build CMakeFiles/gardener_core.dir/src/log_reader.c.obj: C_COMPILER__gardener_co
 #############################################
 # Link the static library libgardener_core.a
 
-build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj CMakeFiles/gardener_core.dir/src/registry.c.obj CMakeFiles/gardener_core.dir/src/ingest.c.obj CMakeFiles/gardener_core.dir/src/packet.c.obj CMakeFiles/gardener_core.dir/src/log_writer.c.obj CMakeFiles/gardener_core.dir/src/log_reader.c.obj
+build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj CMakeFiles/gardener_core.dir/src/registry.c.obj CMakeFiles/gardener_core.dir/src/ingest.c.obj CMakeFiles/gardener_core.dir/src/packet.c.obj CMakeFiles/gardener_core.dir/src/log_writer.c.obj CMakeFiles/gardener_core.dir/src/log_reader.c.obj CMakeFiles/gardener_core.dir/src/replay.c.obj
   CONFIG = Debug
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles\gardener_core.dir
@@ -586,6 +595,44 @@ build test_log_reader.exe: C_EXECUTABLE_LINKER__test_log_reader_Debug CMakeFiles
   TARGET_PDB = test_log_reader.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_log_reader.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_replay
+
+
+#############################################
+# Order-only phony target for test_replay
+
+build cmake_object_order_depends_target_test_replay: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_replay.dir/tests/test_replay.c.obj: C_COMPILER__test_replay_unscanned_Debug D$:/VS_Code/Gardener/tests/test_replay.c || cmake_object_order_depends_target_test_replay
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_replay.dir\tests\test_replay.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_replay.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_replay.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_replay.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_replay
+
+
+#############################################
+# Link the executable test_replay.exe
+
+build test_replay.exe: C_EXECUTABLE_LINKER__test_replay_Debug CMakeFiles/test_replay.dir/tests/test_replay.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_replay.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_replay.exe
+  TARGET_IMPLIB = libtest_replay.dll.a
+  TARGET_PDB = test_replay.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_replay.dir
+
 
 #############################################
 # Utility command for test
@@ -649,6 +696,8 @@ build test_platform: phony test_platform.exe
 
 build test_registry: phony test_registry.exe
 
+build test_replay: phony test_replay.exe
+
 build test_ring: phony test_ring.exe
 
 # =============================================================================
@@ -659,7 +708,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe
 
 # =============================================================================
 # Built-in targets
