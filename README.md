@@ -237,7 +237,7 @@ Or use PowerShell 7 (`pwsh`), whose `>` defaults to UTF-8. Piping
     cd build && ctest --output-on-failure
 
 Eleven test suites currently. For a detailed breakdown of what each
-suite checks and why, see [TESTS.md](TESTS.md).
+suite checks and why, see [TESTS.md](tests/TESTS.md).
 
 ## Wire format
 
