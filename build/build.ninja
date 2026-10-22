@@ -633,6 +633,44 @@ build test_replay.exe: C_EXECUTABLE_LINKER__test_replay_Debug CMakeFiles/test_re
   TARGET_PDB = test_replay.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_replay.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_main_args
+
+
+#############################################
+# Order-only phony target for test_main_args
+
+build cmake_object_order_depends_target_test_main_args: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_main_args.dir/tests/test_main_args.c.obj: C_COMPILER__test_main_args_unscanned_Debug D$:/VS_Code/Gardener/tests/test_main_args.c || cmake_object_order_depends_target_test_main_args
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_main_args.dir\tests\test_main_args.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_main_args.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_main_args.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_main_args.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_main_args
+
+
+#############################################
+# Link the executable test_main_args.exe
+
+build test_main_args.exe: C_EXECUTABLE_LINKER__test_main_args_Debug CMakeFiles/test_main_args.dir/tests/test_main_args.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_main_args.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_main_args.exe
+  TARGET_IMPLIB = libtest_main_args.dll.a
+  TARGET_PDB = test_main_args.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_main_args.dir
+
 
 #############################################
 # Utility command for test
@@ -688,6 +726,8 @@ build test_log_reader: phony test_log_reader.exe
 
 build test_log_writer: phony test_log_writer.exe
 
+build test_main_args: phony test_main_args.exe
+
 build test_packet_bin: phony test_packet_bin.exe
 
 build test_packet_json: phony test_packet_json.exe
@@ -708,7 +748,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe
 
 # =============================================================================
 # Built-in targets

@@ -78,3 +78,7 @@ add_test(NAME log_reader COMMAND test_log_reader)
 add_executable(test_replay tests/test_replay.c)     # B4
 target_link_libraries(test_replay PRIVATE gardener_core)
 add_test(NAME replay COMMAND test_replay)
+
+add_executable(test_main_args tests/test_main_args.c)     # B5
+target_link_libraries(test_main_args PRIVATE gardener_core)
+add_test(NAME main_args COMMAND test_main_args)
