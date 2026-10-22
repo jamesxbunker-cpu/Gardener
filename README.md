@@ -5,9 +5,11 @@ multi-channel system, flags anomalies, and (later) can act on them.
 
 ## Status
 
-Phase B, in progress. B0 (log format), B1 (log writer), B2 (log
-reader), and B3 (`gensim`) are done. B4 (replay) and B5 (wire logging
-into `gardener`) are next.
+Phase B complete. Phases A and B are both in. The library ingests
+packets, keeps per-channel history, writes and reads binary logs
+with a sidecar index, replays logs through ingest at any speed, and
+comes with a Python simulated source. Detection, control, and the
+dashboard are later phases.
 
 ## What Gardener is
 
@@ -24,9 +26,10 @@ cannot see because the controller only looks at its own loop.
 
 In its current state Gardener is a C library plus a set of small
 command-line tools, running on a PC. It ingests packets, keeps
-per-channel history in memory, writes and reads binary logs, and can
-be driven by a Python simulated source. Detection, control, and the
-dashboard are later phases.
+per-channel history in memory, writes and reads binary logs, replays
+recorded logs through the ingest path, and can be driven by a Python
+simulated source. Detection, control, and the dashboard are later
+phases.
 
 ## How it fits together
 
@@ -43,7 +46,7 @@ dashboard are later phases.
                                           │            ▼                │
     ┌──────────────────┐                  │  ┌────────────────────┐     │
     │ log_writer       │ ◄─────────────── │  │ per-channel state  │     │
-    │ gardener.bin     │   (B5, planned)  │  │  ring[1024]        │     │
+    │ gardener.bin     │   --log <path>   │  │  ring[1024]        │     │
     │ gardener.idx     │                  │  │  latest sample     │     │
     └────────┬─────────┘                  │  └────────────────────┘     │
              │                            └─────────────────────────────┘
@@ -52,7 +55,7 @@ dashboard are later phases.
     ┌──────────────────┐                    snapshot / history
     │ log_reader       │                    (read via ingest_latest,
     │ gardener-log     │                     ingest_state)
-    │ (CLI dump)       │
+    │ gardener --replay│
     └──────────────────┘
 
 The three data structures to know:
@@ -96,15 +99,19 @@ The three data structures to know:
 - **`log_reader_t`** — reads logs, walks records in logical order,
   does time-range queries using the index, reconstructs the registry
   from the header snapshot.
+- **`replay`** (`replay_run`) — reads a log and feeds packets through
+  ingest at three speeds (max, real, scaled) with window filtering
+  and looping.
 
 ### Executables and tools
 
-- **`gardener`** — reads JSONL packets from stdin, feeds them to
-  ingest, prints stats on exit. (Log writing to be wired in B5.)
-- **`gardener-dump`** — two modes: print the channel registry, or
-  feed a JSONL file and print the resulting snapshot.
-- **`gardener-log`** — reads a binary log and prints its records as
-  a table or as JSONL. Supports `--from` / `--to` time filtering via
+- **`gardener`** — reads JSONL packets from stdin (or replays a binary
+  log with `--replay`), feeds them to ingest, and optionally writes a
+  binary log with `--log`.
+- **`gardener-dump`** — two modes: print the channel registry, or feed
+  a JSONL file and print the resulting snapshot.
+- **`gardener-log`** — reads a binary log and prints its records as a
+  table or as JSONL. Supports `--from` / `--to` time filtering via
   the index.
 - **`gensim`** (Python) — a simulated source. Emits JSONL packets on
   stdout, driven by a scenario file with fault injection. See
@@ -112,8 +119,6 @@ The three data structures to know:
 
 ## What does not exist yet
 
-- Replay of a binary log through the ingest path (B4).
-- Wiring the log writer into `gardener`'s main loop (B5).
 - Baseline learning and detectors (Phase C).
 - Control / policy engine (Phase E).
 - PC / dashboard link (Phase F).
@@ -127,18 +132,40 @@ Requires a C11 compiler and CMake 3.16+.
 
 ## Run
 
+### Ingest from stdin
+
     ./build/gardener --version
     ./build/gardener --verbose
     ./build/gardener --quiet
     echo '{"t":1,"v":{"1":20.5}}' | ./build/gardener
 
+### Ingest from stdin and write a log
+
+    echo '{"t":1,"v":{"1":20.5}}' | ./build/gardener \
+        --log run.bin --log-fresh
+
+    ./build/gardener-log --file run.bin --header
+    ./build/gardener-log --file run.bin
+
+### Replay a log
+
+    ./build/gardener --replay run.bin
+    ./build/gardener --replay run.bin --replay-speed real
+    ./build/gardener --replay run.bin --replay-speed 10
+    ./build/gardener --replay run.bin --replay-from 5000000000 --replay-to 8000000000
+
+### Replay a log and write a new one
+
+    ./build/gardener --replay run.bin --log run_copy.bin --log-fresh
+
+### Dump the channel registry
+
     ./build/gardener-dump --config configs/channels.toml
+
+### Feed a JSONL file and print a snapshot
+
     ./build/gardener-dump --feed packets.jsonl --channels configs/channels.toml
     ./build/gardener-dump --feed packets.jsonl --channels configs/channels.toml --counts
-
-    ./build/gardener-log --file gardener.bin --header
-    ./build/gardener-log --file gardener.bin --from 5000000000 --to 8000000000
-    ./build/gardener-log --file gardener.bin --jsonl --limit 20
 
 ### Simulated source
 
@@ -149,10 +176,10 @@ Requires Python 3.8+. Optional PyYAML.
     py tools/gensim/gensim.py --scenario tools/gensim/scenarios/sensor_drift.yaml \
         --duration 300 --speed 10 > drift.jsonl
 
-Piping `gensim` into `gardener`:
+Piping `gensim` into `gardener` and recording to a log:
 
     py tools/gensim/gensim.py --scenario tools/gensim/scenarios/normal.yaml --duration 30 \
-        | ./build/gardener --channels configs/channels.toml
+        | ./build/gardener --channels configs/channels.toml --log build/session.bin
 
 **Windows note:** PowerShell's `>` re-encodes stdout as UTF-16LE on
 PowerShell 5.x, which `gardener` cannot parse. Redirect through
@@ -160,13 +187,56 @@ PowerShell 5.x, which `gardener` cannot parse. Redirect through
 
     cmd /c "py tools\gensim\gensim.py --scenario ... --duration 300 > drift.jsonl"
 
-Or use PowerShell 7 (`pwsh`), whose `>` defaults to UTF-8.
+Or use PowerShell 7 (`pwsh`), whose `>` defaults to UTF-8. Piping
+(`|`) is not affected; only file redirection.
+
+## Options reference
+
+### `gardener`
+
+    --channels <path>        channel registry (default: configs/channels.toml)
+    --stats-every <n>        print counters every n packets
+    --verbose                log at DEBUG level
+    --quiet                  log at WARN level
+    --version                print version
+    --help                   print usage
+
+    --log <path>             write ingested packets to a binary log
+    --log-max <bytes>        log size, accepts K/M/G suffix (default 100M, min 1M)
+    --log-fresh              truncate an existing log instead of appending
+
+    --replay <path>          replay a binary log instead of stdin
+    --replay-speed <mode>    max (default), real, or a positive factor
+    --replay-from <ts_ns>    start at this timestamp
+    --replay-to <ts_ns>      stop before this timestamp
+    --replay-loop            replay until interrupted
+    --replay-progress <n>    print progress every n packets
+
+### `gardener-log`
+
+    --file <path>            binary log to read
+    --from <ts_ns>           start at this timestamp
+    --to <ts_ns>             stop before this timestamp
+    --limit <n>              print at most n records
+    --jsonl                  output as JSONL instead of a table
+    --header                 print header and registry, then exit
+    --quiet                  suppress warnings
+    --help                   print usage
+
+### `gardener-dump`
+
+    --config <path>          channel registry to print (no feed)
+    --feed <path>            JSONL file to feed through ingest
+    --channels <path>        channel registry for feed mode
+    --counts                 include per-channel sample count column
+    --quiet                  suppress warnings
+    --help                   print usage
 
 ## Test
 
     cd build && ctest --output-on-failure
 
-Nine test suites currently. For a detailed breakdown of what each
+Eleven test suites currently. For a detailed breakdown of what each
 suite checks and why, see [TESTS.md](TESTS.md).
 
 ## Wire format
@@ -229,14 +299,16 @@ The binary log, locked as of B0:
       log.h               log format constants and structs
       log_writer.h        log writer API
       log_reader.h        log reader API
+      replay.h            replay engine API
     src/                implementation
-      main.c              entry point
+      main.c              entry point (stdin / replay / logging)
       ring.c
       registry.c
       ingest.c
       packet.c
       log_writer.c
       log_reader.c
+      replay.c
       platform/           the only place OS APIs are called
     tools/              developer tools
       gardener_dump.c     JSONL feed + snapshot table
@@ -291,36 +363,32 @@ their own line. Nested tables and arrays are not supported.
   "sensor". Unknown channels get logged and are easy to spot.
 - Unknown channel ids are synthesized into the registry on first sight
   and cached. Samples are stored normally; the descriptor has
-  `role = ROLE_UNKNOWN` so downstream detectors can see they're
-  unclassified.
+  `role = ROLE_UNKNOWN`.
 - Every sample in a ring has exactly one of `CH_FLAG_VALID` or
-  `CH_FLAG_STALE` set. Detectors can rely on that.
+  `CH_FLAG_STALE` set.
 - Per-sample timestamps win over packet timestamps; zero means
   "inherit".
 - `PACKET_FLAG_SIMULATED` propagates to `CH_FLAG_SIMULATED` on every
-  sample. Detectors can down-weight simulated input in a mixed
-  environment.
+  sample.
 
 ### Constants and bounds
 
-- `REGISTRY_MAX_CHANNELS = 256`, arena 64 B/channel. Both compile-time.
+- `REGISTRY_MAX_CHANNELS = 256`, arena 64 B/channel.
 - `ingest_t` is static: `REGISTRY_MAX_CHANNELS × INGEST_RING_CAP`
-  samples, ~6.3 MB total. No heap, no allocation after init.
+  samples, ~6.3 MB total. **Must be declared `static` or global — not
+  on the stack.** A stack local of this type will overflow the default
+  Windows thread stack. See TESTS.md for details.
 - `INGEST_RING_CAP = 1024` samples per channel (~102 s at 10 Hz).
 - `PACKET_MAX_CH = 64`. Keeps `packet_t` around 1.5 KB so it can live
   on the stack.
 - A packet with more than `PACKET_MAX_CH` channels is rejected before
-  any counter is bumped. `packets_seen` counts *accepted* packets, not
-  received ones.
+  any counter is bumped.
 
 ### Registry
 
 - Registry string storage lives in a fixed arena inside the registry
-  struct. No heap; the registry is trivially copyable and embeddable
-  in a larger static struct (as `ingest_t` does).
-- Registry loads are append-only. Calling `registry_load_toml` twice
-  on the same registry doubles its entries. Add a `registry_clear`
-  when runtime reload is needed.
+  struct. No heap.
+- Registry loads are append-only.
 - A `[[channel]]` with no `name` is dropped with a warning. One with
   no `role` is kept with `ROLE_UNKNOWN` and a warning.
 
@@ -330,39 +398,36 @@ their own line. Nested tables and arrays are not supported.
   and the union bytes. Inferred types (when `"type"` is absent) pick
   i32 for whole numbers and f32 otherwise.
 - `packet_to_json` returns the length the full encoding needs, even if
-  the caller's buffer was too small. Callers detect truncation by
-  comparing the return value to `cap`.
-- `find_key` in `packet.c` stops at the end of the current object.
-  This keeps a key like `"type"` in a later entry of the same packet
-  from being matched while parsing an earlier entry.
-- The binary wire format is little-endian on every field, byte-by-byte
-  written and read, so the codec is independent of host endianness
-  and alignment.
-- `packet_decode` returns bytes consumed, not the buffer length. A
-  caller walks a stream of concatenated packets by repeatedly
-  advancing past the return value.
-- The CRC is CRC-16/MODBUS, not CRC-16/ARC. The names are close and
-  easy to confuse; the check value in the test pins which one this is.
+  the caller's buffer was too small.
+- `find_key` in `packet.c` stops at the end of the current object, so
+  a key in a later entry of the same packet is not matched while
+  parsing an earlier entry.
+- The binary wire format is little-endian on every field, independent
+  of host endianness and alignment.
+- `packet_decode` returns bytes consumed, so a caller can walk a
+  stream of concatenated packets.
+- The CRC is CRC-16/MODBUS, not CRC-16/ARC.
 
 ### Log
 
-- The log is preallocated at a fixed size and wraps in place. Header,
-  registry snapshot, and index are the only metadata.
+- The log is preallocated at a fixed size and wraps in place.
 - `log_writer` refuses to open a file with a bad header unless
-  `start_fresh` is set. This prevents silently overwriting a possibly
-  valuable file that just happens to be corrupt.
+  `start_fresh` is set.
 - `log_reader_seek_ns` positions the reader so a following
   `log_reader_next` returns the first record with `ts >= target`.
 - `log_reader_prev` is not implemented. Backward iteration would need
   a small ring of recent offsets in the reader. Nothing currently
   needs it.
+- Logging failures are non-fatal to `gardener`. If `--log` can't open
+  or a write fails mid-run, ingest continues and the failure is
+  reported at exit.
 
 ### Platform
 
 - No OS headers outside `src/platform/`. This keeps the eventual MCU
   port (V2) a folder swap rather than a rewrite.
 - `plat_log` writes to `stderr` only. `stdout` is reserved for
-  machine-readable output (dump tool, JSONL stream).
+  machine-readable output.
 
 ## Roadmap
 
@@ -370,12 +435,11 @@ their own line. Nested tables and arrays are not supported.
       A0 skeleton · A1 ring · A2 registry
       A3 ingest · A4 JSONL · A5 dump · A6 binary
 
-    Phase B — logging and simulation             in progress
-      B0 log format · B1 log writer
-      B2 log reader · B3 gensim
-      B4 replay · B5 wire log into gardener
+    Phase B — logging and simulation             done
+      B0 log format · B1 log writer · B2 log reader
+      B3 gensim · B4 replay · B5 wire log into gardener
 
-    Phase C — baseline model                     planned
+    Phase C — baseline model                     next
       per-channel statistics, regimes, persistence
 
     Phase D — detection                          planned
