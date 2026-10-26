@@ -19,8 +19,9 @@ add_library(gardener_core STATIC
     src/ingest.c
     src/packet.c
     src/log_writer.c
-    src/log_reader.c                  
+    src/log_reader.c
     src/replay.c
+    src/baseline.c                      # C1
 )
 target_include_directories(gardener_core PUBLIC include)
 
@@ -86,3 +87,7 @@ add_test(NAME main_args COMMAND test_main_args)
 add_executable(test_baseline_format tests/test_baseline_format.c)
 target_link_libraries(test_baseline_format PRIVATE gardener_core)
 add_test(NAME baseline_format COMMAND test_baseline_format)
+
+add_executable(test_baseline tests/test_baseline.c)     # C1
+target_link_libraries(test_baseline PRIVATE gardener_core m)
+add_test(NAME baseline COMMAND test_baseline)

@@ -121,6 +121,15 @@ build CMakeFiles/gardener_core.dir/src/replay.c.obj: C_COMPILER__gardener_core_u
   OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
 
+build CMakeFiles/gardener_core.dir/src/baseline.c.obj: C_COMPILER__gardener_core_unscanned_Debug D$:/VS_Code/Gardener/src/baseline.c || cmake_object_order_depends_target_gardener_core
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\gardener_core.dir\src\baseline.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\gardener_core.dir
+  OBJECT_FILE_DIR = CMakeFiles\gardener_core.dir\src
+  TARGET_SUPPORT_DIR = CMakeFiles\gardener_core.dir
+
 
 # =============================================================================
 # Link build statements for STATIC_LIBRARY target gardener_core
@@ -129,7 +138,7 @@ build CMakeFiles/gardener_core.dir/src/replay.c.obj: C_COMPILER__gardener_core_u
 #############################################
 # Link the static library libgardener_core.a
 
-build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj CMakeFiles/gardener_core.dir/src/registry.c.obj CMakeFiles/gardener_core.dir/src/ingest.c.obj CMakeFiles/gardener_core.dir/src/packet.c.obj CMakeFiles/gardener_core.dir/src/log_writer.c.obj CMakeFiles/gardener_core.dir/src/log_reader.c.obj CMakeFiles/gardener_core.dir/src/replay.c.obj
+build libgardener_core.a: C_STATIC_LIBRARY_LINKER__gardener_core_Debug CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj CMakeFiles/gardener_core.dir/src/ring.c.obj CMakeFiles/gardener_core.dir/src/registry.c.obj CMakeFiles/gardener_core.dir/src/ingest.c.obj CMakeFiles/gardener_core.dir/src/packet.c.obj CMakeFiles/gardener_core.dir/src/log_writer.c.obj CMakeFiles/gardener_core.dir/src/log_reader.c.obj CMakeFiles/gardener_core.dir/src/replay.c.obj CMakeFiles/gardener_core.dir/src/baseline.c.obj
   CONFIG = Debug
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles\gardener_core.dir
@@ -709,6 +718,44 @@ build test_baseline_format.exe: C_EXECUTABLE_LINKER__test_baseline_format_Debug 
   TARGET_PDB = test_baseline_format.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_baseline_format.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_baseline
+
+
+#############################################
+# Order-only phony target for test_baseline
+
+build cmake_object_order_depends_target_test_baseline: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_baseline.dir/tests/test_baseline.c.obj: C_COMPILER__test_baseline_unscanned_Debug D$:/VS_Code/Gardener/tests/test_baseline.c || cmake_object_order_depends_target_test_baseline
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_baseline.dir\tests\test_baseline.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_baseline.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_baseline.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_baseline.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_baseline
+
+
+#############################################
+# Link the executable test_baseline.exe
+
+build test_baseline.exe: C_EXECUTABLE_LINKER__test_baseline_Debug CMakeFiles/test_baseline.dir/tests/test_baseline.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lm  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_baseline.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_baseline.exe
+  TARGET_IMPLIB = libtest_baseline.dll.a
+  TARGET_PDB = test_baseline.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_baseline.dir
+
 
 #############################################
 # Utility command for test
@@ -756,6 +803,8 @@ build gardener-log: phony gardener-log.exe
 
 build gardener_core: phony libgardener_core.a
 
+build test_baseline: phony test_baseline.exe
+
 build test_baseline_format: phony test_baseline_format.exe
 
 build test_ingest: phony test_ingest.exe
@@ -788,7 +837,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe
 
 # =============================================================================
 # Built-in targets
