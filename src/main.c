@@ -4,6 +4,7 @@
 #include "gardener/replay.h"
 #include "gardener/log_writer.h"
 #include "gardener/log.h"
+#include "gardener/baseline.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,17 +18,22 @@
  *   (default)      read JSONL packets from stdin, feed to ingest
  *   --replay FILE  replay a binary log through ingest
  *
- * In both modes, the same ingest_t is used. If --log is passed, every
- * successfully ingested packet is also written to a binary log. The
- * log is optional and its failure does not stop ingest.
+ * Optional persistent state:
+ *   --log <path>       write every accepted packet to a binary log
+ *   --baseline <path>  update a baseline model and save it on exit
  *
- * Exit:
+ * Exit codes:
  *   0   ran to completion
  *   1   runtime error (failed to open replay log, ingest init, etc.)
  *   2   usage error
  * ------------------------------------------------------------------- */
 
 #define LINE_MAX 8192
+
+/* Decay the baseline periodically (every N ms of wall clock). Kept
+ * short enough that idle periods get aged out promptly, long enough
+ * that the check itself is negligible. */
+#define BASELINE_DECAY_INTERVAL_MS  30000u
 
 static volatile sig_atomic_t g_stop = 0;
 
@@ -39,7 +45,7 @@ static void on_signal(int sig) {
 static void print_usage(const char *prog) {
     fprintf(stderr,
         "usage: %s [options]\n"
-        "       %s --replay <log.bin> [replay options] [log options]\n"
+        "       %s --replay <log.bin> [replay options] [state options]\n"
         "\n"
         "Default mode reads JSONL packets from stdin.\n"
         "\n"
@@ -57,6 +63,12 @@ static void print_usage(const char *prog) {
         "                          (default: 100M, minimum: 1M)\n"
         "  --log-fresh             truncate an existing log instead of appending\n"
         "\n"
+        "Baseline (optional, both modes):\n"
+        "  --baseline <path>       load or create a baseline model\n"
+        "  --baseline-fresh        start from empty, ignore existing file\n"
+        "  --baseline-halflife <s> decay half-life in seconds (default: 300)\n"
+        "  --baseline-save-every <s> periodic save interval (default: 0 = exit only)\n"
+        "\n"
         "Replay options (require --replay):\n"
         "  --replay <path>         replay a binary log instead of stdin\n"
         "  --replay-speed <mode>   max (default), real, or a positive factor\n"
@@ -69,8 +81,6 @@ static void print_usage(const char *prog) {
 
 /* ---- size parsing ---- */
 
-/* Parse a size with optional K/M/G suffix. "100M" = 100 * 1024 * 1024.
- * Returns 0 on success, -1 on parse error. */
 static int parse_size(const char *s, uint64_t *out) {
     if (!s || !out) return -1;
     char *end = NULL;
@@ -85,9 +95,8 @@ static int parse_size(const char *s, uint64_t *out) {
             default: return -1;
         }
         end++;
-        if (*end) return -1;   /* trailing garbage */
+        if (*end) return -1;
     }
-    /* Guard overflow: reject sizes that would wrap. */
     if (v * (double)mult > 1e15) return -1;
     *out = (uint64_t)(v * (double)mult);
     return 0;
@@ -116,7 +125,29 @@ static void print_log_stats(const log_writer_t *lw) {
         (unsigned)log_writer_wrap_count(lw));
 }
 
-/* ---- replay-speed parser (unchanged from B4) ---- */
+/* Count baseline channels that are READY, and total channels. */
+static void print_baseline_stats(const baseline_t *b, const char *path) {
+    if (!b) return;
+    uint16_t total = baseline_channel_count(b);
+    uint16_t ready = 0;
+    for (uint16_t slot = 0; slot < total; slot++) {
+        /* Check if any regime for this slot is READY. */
+        int any_ready = 0;
+        for (uint16_t r = 0; r < BASELINE_MAX_REGIMES; r++) {
+            const baseline_stat_t *s = &b->stats[slot][r];
+            if (s->state == BASELINE_READY) { any_ready = 1; break; }
+        }
+        if (any_ready) ready++;
+    }
+    fprintf(stderr,
+        "[baseline] path=%s channels=%u ready=%u regimes=%u\n",
+        path ? path : "(memory)",
+        (unsigned)total,
+        (unsigned)ready,
+        (unsigned)baseline_regime_count(b));
+}
+
+/* ---- replay-speed parser ---- */
 
 static int parse_speed(const char *s, replay_speed_t *mode, double *factor) {
     if (!strcmp(s, "max"))  { *mode = REPLAY_SPEED_MAX;    *factor = 1.0; return 0; }
@@ -129,13 +160,57 @@ static int parse_speed(const char *s, replay_speed_t *mode, double *factor) {
     return 0;
 }
 
-/* ---- shared run: feed a packet to ingest and (optionally) log it ---- */
+/* ---- baseline runtime state ---- */
 
-/* Return 0 on success (packet handled), -1 on hard error.
- * Note: a log write failure does *not* fail the packet; it is logged
- * once and subsequent writes are suppressed to avoid log spam. */
+/* Small struct that bundles what main needs to manage the baseline. */
+typedef struct {
+    baseline_t *model;      /* NULL if --baseline not passed */
+    char        path[256];  /* empty if --baseline not passed */
+    uint64_t    last_decay_ns;
+    uint64_t    last_save_ns;
+    uint64_t    save_interval_ns;   /* 0 = save only on exit */
+} baseline_runtime_t;
+
+/* Update the baseline from a packet. Return 0 on success, -1 on hard
+ * error (currently only NULL, so never in practice). A baseline
+ * failure does NOT fail the packet. */
+static void maybe_update_baseline(baseline_runtime_t *br,
+                                  const packet_t *p) {
+    if (!br->model) return;
+    baseline_update(br->model, p);
+}
+
+/* Called on a timer from the main loop. Decays if the interval has
+ * elapsed; saves if the save interval has elapsed. */
+static void tick_baseline(baseline_runtime_t *br, uint64_t now_ns) {
+    if (!br->model) return;
+
+    uint64_t decay_interval_ns =
+        (uint64_t)BASELINE_DECAY_INTERVAL_MS * 1000000ull;
+    if (now_ns - br->last_decay_ns >= decay_interval_ns) {
+        baseline_decay(br->model, now_ns);
+        br->last_decay_ns = now_ns;
+    }
+
+    if (br->save_interval_ns > 0 &&
+        now_ns - br->last_save_ns >= br->save_interval_ns) {
+        if (baseline_save(br->model, br->path) != 0) {
+            plat_log(LOG_WARN, "baseline: periodic save failed");
+        } else {
+            plat_log(LOG_DEBUG, "baseline: periodic save ok");
+        }
+        br->last_save_ns = now_ns;
+    }
+}
+
+/* ---- packet handler ---- */
+
+/* Feed a packet to ingest, log, and baseline. Log and baseline failures
+ * do not fail the packet. */
 static int handle_packet(ingest_t *ing, log_writer_t *lw,
-                         const packet_t *p, bool *log_failed_once) {
+                         baseline_runtime_t *br,
+                         const packet_t *p,
+                         bool *log_failed_once) {
     int n = ingest_feed(ing, p);
     if (n < 0) return -1;
 
@@ -147,16 +222,20 @@ static int handle_packet(ingest_t *ing, log_writer_t *lw,
             *log_failed_once = true;
         }
     }
+
+    maybe_update_baseline(br, p);
     return 0;
 }
 
 /* ---- stdin JSONL mode ---- */
 
 static int run_stdin_mode(ingest_t *ing, log_writer_t *lw,
+                          baseline_runtime_t *br,
                           unsigned long stats_every) {
     plat_log(LOG_INFO,
-             "gardener 0.1.0 (B5): reading JSONL packets from stdin%s",
-             lw ? " (logging)" : "");
+             "gardener 0.1.0 (C5): reading JSONL packets from stdin%s%s",
+             lw ? " (logging)" : "",
+             br->model ? " (baseline)" : "");
 
     char line[LINE_MAX];
     unsigned long long lines = 0;
@@ -179,11 +258,14 @@ static int run_stdin_mode(ingest_t *ing, log_writer_t *lw,
                      lines, line, len > 80 ? "..." : "");
             continue;
         }
-        if (handle_packet(ing, lw, &p, &log_failed) < 0) {
+        if (handle_packet(ing, lw, br, &p, &log_failed) < 0) {
             bad++;
             plat_log(LOG_WARN, "ingest rejected packet on line %llu", lines);
             continue;
         }
+
+        tick_baseline(br, p.timestamp_ns);
+
         if (stats_every && (ing->packets_seen % stats_every) == 0) {
             print_ingest_stats(ing);
         }
@@ -197,25 +279,18 @@ static int run_stdin_mode(ingest_t *ing, log_writer_t *lw,
 
 /* ---- replay mode ---- */
 
-/* Replay with logging: feed through ingest, log each packet.
- * We cannot use replay_run() directly because it feeds via ingest_feed
- * internally and does not call log_writer_append. Instead we replicate
- * its loop here with both hooks. */
-
 static int run_replay_mode(ingest_t *ing, log_writer_t *lw,
+                           baseline_runtime_t *br,
                            const replay_opts_t *opts,
                            unsigned long stats_every) {
     plat_log(LOG_INFO,
-             "gardener 0.1.0 (B5): replaying %s%s",
+             "gardener 0.1.0 (C5): replaying %s%s%s",
              opts->log_path,
-             lw ? " (logging)" : "");
+             lw ? " (logging)" : "",
+             br->model ? " (baseline)" : "");
 
-    /* We reuse the replay_run() infrastructure but interpose log
-     * writing by running replay through ingest and reading the
-     * packet stream ourselves. Simpler: use replay_run() when there is
-     * no log writer, and a custom loop with the writer otherwise. */
-
-    if (!lw) {
+    if (!lw && !br->model) {
+        /* No logging, no baseline: use replay_run as-is. */
         replay_stats_t rs;
         int rc = replay_run(opts, ing, &rs);
         if (rc != 0) return 1;
@@ -230,7 +305,7 @@ static int run_replay_mode(ingest_t *ing, log_writer_t *lw,
         return 0;
     }
 
-    /* Replay + log: replicate the reader loop, feeding and logging. */
+    /* Custom loop for logging and/or baseline. */
     log_reader_t *r = log_reader_open(opts->log_path);
     if (!r) return 1;
 
@@ -281,11 +356,16 @@ static int run_replay_mode(ingest_t *ing, log_writer_t *lw,
             continue;
         }
 
-        if (handle_packet(ing, lw, &p, &log_failed) < 0) {
+        if (handle_packet(ing, lw, br, &p, &log_failed) < 0) {
             log_reader_close(r);
             return 1;
         }
         packets_fed++;
+
+        /* Decay on the packet's timestamp, so it's in the same epoch
+         * as the sample timestamps the baseline stores. */
+        tick_baseline(br, p.timestamp_ns);
+
         if (stats_every && (packets_fed % stats_every) == 0) {
             print_ingest_stats(ing);
         }
@@ -311,8 +391,12 @@ int main(int argc, char **argv) {
     const char *channels = "configs/channels.toml";
     const char *replay_path = NULL;
     const char *log_path = NULL;
+    const char *baseline_path = NULL;
     uint64_t    log_max = LOG_DEFAULT_MAX;
     bool        log_fresh = false;
+    bool        baseline_fresh = false;
+    uint64_t    baseline_halflife_s = 300;
+    uint64_t    baseline_save_every_s = 0;
     int verbose = 0;
     int quiet = 0;
     unsigned long stats_every = 0;
@@ -322,7 +406,7 @@ int main(int argc, char **argv) {
 
     for (int i = 1; i < argc; i++) {
         const char *a = argv[i];
-        if      (!strcmp(a, "--version")) { puts("gardener 0.1.0 (phase B5)"); return 0; }
+        if      (!strcmp(a, "--version")) { puts("gardener 0.1.0 (phase C5)"); return 0; }
         else if (!strcmp(a, "--verbose")) { verbose = 1; }
         else if (!strcmp(a, "--quiet"))   { quiet = 1; }
         else if (!strcmp(a, "--channels") && i + 1 < argc) {
@@ -340,8 +424,16 @@ int main(int argc, char **argv) {
                 return 2;
             }
         }
-        else if (!strcmp(a, "--log-fresh")) {
-            log_fresh = true;
+        else if (!strcmp(a, "--log-fresh")) { log_fresh = true; }
+        else if (!strcmp(a, "--baseline") && i + 1 < argc) {
+            baseline_path = argv[++i];
+        }
+        else if (!strcmp(a, "--baseline-fresh")) { baseline_fresh = true; }
+        else if (!strcmp(a, "--baseline-halflife") && i + 1 < argc) {
+            baseline_halflife_s = strtoull(argv[++i], NULL, 10);
+        }
+        else if (!strcmp(a, "--baseline-save-every") && i + 1 < argc) {
+            baseline_save_every_s = strtoull(argv[++i], NULL, 10);
         }
         else if (!strcmp(a, "--replay") && i + 1 < argc) {
             replay_path = argv[++i];
@@ -389,9 +481,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    /* Log writer, optional. Failure to open is non-fatal: log a warning
-     * and continue without a log. The user gets a clear stderr message
-     * and the run proceeds. */
+    /* Log writer, optional. */
     log_writer_t *lw = NULL;
     if (log_path) {
         lw = log_writer_open(log_path, log_max, &ing.registry, log_fresh);
@@ -402,11 +492,57 @@ int main(int argc, char **argv) {
         }
     }
 
+    /* Baseline, optional. */
+    static baseline_t baseline_model;
+    baseline_runtime_t br;
+    memset(&br, 0, sizeof(br));
+
+    if (baseline_path) {
+        uint64_t halflife_ns = baseline_halflife_s * 1000000000ull;
+
+        if (!baseline_fresh) {
+            /* Try to load. If it fails, fall through to fresh init. */
+            if (baseline_load(&baseline_model, baseline_path,
+                              &ing.registry) == 0) {
+                plat_log(LOG_INFO, "baseline: loaded %s", baseline_path);
+            } else {
+                plat_log(LOG_INFO,
+                         "baseline: could not load %s; starting fresh",
+                         baseline_path);
+                if (baseline_init(&baseline_model, &ing.registry,
+                                  halflife_ns) != 0) {
+                    plat_log(LOG_ERROR, "baseline_init failed");
+                    if (lw) log_writer_close(lw);
+                    return 1;
+                }
+            }
+        } else {
+            if (baseline_init(&baseline_model, &ing.registry,
+                              halflife_ns) != 0) {
+                plat_log(LOG_ERROR, "baseline_init failed");
+                if (lw) log_writer_close(lw);
+                return 1;
+            }
+        }
+
+        br.model = &baseline_model;
+        snprintf(br.path, sizeof(br.path), "%s", baseline_path);
+        br.last_decay_ns = 0;   /* 0 means "fire on first packet" */
+        br.last_save_ns  = plat_wall_ns();
+        br.save_interval_ns = baseline_save_every_s * 1000000000ull;
+
+        plat_log(LOG_INFO,
+                 "baseline: halflife=%llus channels=%u regimes=%u",
+                 (unsigned long long)baseline_halflife_s,
+                 (unsigned)baseline_channel_count(&baseline_model),
+                 (unsigned)baseline_regime_count(&baseline_model));
+    }
+
     int rc;
     if (replay_path) {
-        rc = run_replay_mode(&ing, lw, &replay_opts, stats_every);
+        rc = run_replay_mode(&ing, lw, &br, &replay_opts, stats_every);
     } else {
-        rc = run_stdin_mode(&ing, lw, stats_every);
+        rc = run_stdin_mode(&ing, lw, &br, stats_every);
     }
 
     print_ingest_stats(&ing);
@@ -414,6 +550,15 @@ int main(int argc, char **argv) {
         print_log_stats(lw);
     } else if (log_path) {
         fprintf(stderr, "[log] disabled (open failed)\n");
+    }
+    if (br.model) {
+        if (baseline_save(br.model, br.path) != 0) {
+            plat_log(LOG_WARN, "baseline: final save failed");
+            fprintf(stderr, "[baseline] final save FAILED\n");
+        } else {
+            plat_log(LOG_DEBUG, "baseline: final save ok");
+        }
+        print_baseline_stats(br.model, br.path);
     }
 
     if (lw) log_writer_close(lw);

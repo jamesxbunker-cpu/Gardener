@@ -870,6 +870,44 @@ build test_baseline_persist.exe: C_EXECUTABLE_LINKER__test_baseline_persist_Debu
   TARGET_PDB = test_baseline_persist.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_baseline_persist.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_main_baseline
+
+
+#############################################
+# Order-only phony target for test_main_baseline
+
+build cmake_object_order_depends_target_test_main_baseline: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_main_baseline.dir/tests/test_main_baseline.c.obj: C_COMPILER__test_main_baseline_unscanned_Debug D$:/VS_Code/Gardener/tests/test_main_baseline.c || cmake_object_order_depends_target_test_main_baseline
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_main_baseline.dir\tests\test_main_baseline.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_main_baseline.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_main_baseline.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_main_baseline.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_main_baseline
+
+
+#############################################
+# Link the executable test_main_baseline.exe
+
+build test_main_baseline.exe: C_EXECUTABLE_LINKER__test_main_baseline_Debug CMakeFiles/test_main_baseline.dir/tests/test_main_baseline.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lm  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_main_baseline.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_main_baseline.exe
+  TARGET_IMPLIB = libtest_main_baseline.dll.a
+  TARGET_PDB = test_main_baseline.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_main_baseline.dir
+
 
 #############################################
 # Utility command for test
@@ -937,6 +975,8 @@ build test_log_writer: phony test_log_writer.exe
 
 build test_main_args: phony test_main_args.exe
 
+build test_main_baseline: phony test_main_baseline.exe
+
 build test_packet_bin: phony test_packet_bin.exe
 
 build test_packet_json: phony test_packet_json.exe
@@ -957,7 +997,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe test_baseline_regimes.exe test_baseline_decay.exe test_baseline_persist.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe test_baseline_regimes.exe test_baseline_decay.exe test_baseline_persist.exe test_main_baseline.exe
 
 # =============================================================================
 # Built-in targets

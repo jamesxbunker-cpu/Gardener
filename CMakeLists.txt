@@ -103,3 +103,7 @@ add_test(NAME baseline_decay COMMAND test_baseline_decay)
 add_executable(test_baseline_persist tests/test_baseline_persist.c)     # C4
 target_link_libraries(test_baseline_persist PRIVATE gardener_core m)
 add_test(NAME baseline_persist COMMAND test_baseline_persist)
+
+add_executable(test_main_baseline tests/test_main_baseline.c)     # C5
+target_link_libraries(test_main_baseline PRIVATE gardener_core m)
+add_test(NAME main_baseline COMMAND test_main_baseline)
