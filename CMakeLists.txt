@@ -82,3 +82,7 @@ add_test(NAME replay COMMAND test_replay)
 add_executable(test_main_args tests/test_main_args.c)     # B5
 target_link_libraries(test_main_args PRIVATE gardener_core)
 add_test(NAME main_args COMMAND test_main_args)
+
+add_executable(test_baseline_format tests/test_baseline_format.c)
+target_link_libraries(test_baseline_format PRIVATE gardener_core)
+add_test(NAME baseline_format COMMAND test_baseline_format)
