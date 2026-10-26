@@ -5,22 +5,26 @@
 #include <math.h>
 
 /* ---------------------------------------------------------------------
- * Baseline model, C2: per-channel, per-regime Welford statistics.
+ * Baseline model, C3: per-channel, per-regime Welford statistics with
+ * exponential decay.
  *
- * In C2, a "regime" is derived from the is_regime channels configured
+ * In C3, a "regime" is derived from the is_regime channels configured
  * in the registry. Their current values are hashed to produce a
  * regime index in [0, BASELINE_MAX_REGIMES). Every (channel, regime)
  * pair maintains its own Welford statistics.
  *
+ * Decay is explicit: baseline_decay(b, now_ns) ages all slots by the
+ * elapsed time since their last update. baseline_update does NOT
+ * decay; it only accumulates. This keeps "count" a clean measure of
+ * samples fed and makes decay a separate, testable operation.
+ *
  * No regime channels → single regime 0. This preserves the C1
  * behavior for systems that don't use regimes.
  * ------------------------------------------------------------------- */
- 
+
 /* MurmurHash3 finalizer. Spreads the low bits of an input hash across
- * the full 32-bit output. Cheap (3 multiplies, 3 xors) and fixes the
- * "FNV + mod power-of-two" pattern where small inputs cluster in low
- * buckets. Required whenever a hash result is taken modulo a power of
- * two, since the modulo discards the high bits. */
+ * the full 32-bit output. Required whenever a hash is taken modulo a
+ * power of two, since the modulo discards the high bits. */
 static uint32_t mix32(uint32_t h) {
     h ^= h >> 16;
     h *= 0x7feb352du;
@@ -91,8 +95,6 @@ static uint16_t find_slot(const baseline_t *b, uint16_t ch_id) {
     return 0xFFFF;
 }
 
-/* Find a sample for a given channel id within a packet. Returns NULL
- * if the channel isn't in the packet. */
 static const sample_t *find_sample(const packet_t *p, uint16_t ch_id) {
     for (uint16_t i = 0; i < p->channel_count; i++) {
         if (p->samples[i].channel_id == ch_id) return &p->samples[i];
@@ -105,12 +107,10 @@ uint16_t baseline_regime_for_packet(const baseline_t *b, const packet_t *p) {
     if (b->regime_ch_count == 0) return 0;
 
     /* Mix each regime channel's quantized value independently, then
-     * XOR the results together. This gives every channel's value full
-     * influence over every bit of the output. The previous FNV-based
-     * scheme failed on two-bool inputs like (0,0) vs (1,1) — FNV is
-     * designed for text, not for a handful of small integers, and its
-     * low-bit distribution is poor, which matters when the modulus is
-     * a power of two. */
+     * XOR the results. This gives every channel's value full influence
+     * over every bit of the output. FNV on short inputs has poor
+     * low-bit distribution, which matters when the modulus is a power
+     * of two. */
     uint32_t h = 0x811C9DC5u;
     for (uint8_t i = 0; i < b->regime_ch_count; i++) {
         const sample_t *s = find_sample(p, b->regime_ch_ids[i]);
@@ -124,8 +124,7 @@ uint16_t baseline_regime_for_packet(const baseline_t *b, const packet_t *p) {
     return (uint16_t)(h % BASELINE_MAX_REGIMES);
 }
 
-static void welford_update(baseline_stat_t *s, float v,
-                           uint64_t ts_ns) {
+static void welford_update(baseline_stat_t *s, float v, uint64_t ts_ns) {
     if (s->state == BASELINE_EMPTY) {
         s->count       = 1.0f;
         s->mean        = v;
@@ -150,7 +149,9 @@ static void welford_update(baseline_stat_t *s, float v,
     if (ts_ns < s->first_ts_ns) s->first_ts_ns = ts_ns;
     if (ts_ns > s->last_ts_ns)  s->last_ts_ns  = ts_ns;
 
-    if (s->state == BASELINE_LEARNING &&
+    /* LEARNING or STALE both transition to READY when count crosses
+     * the threshold. EMPTY was handled above. READY stays READY. */
+    if ((s->state == BASELINE_LEARNING || s->state == BASELINE_STALE) &&
         s->count >= (float)BASELINE_MIN_SAMPLES) {
         s->state = BASELINE_READY;
     }
@@ -159,14 +160,8 @@ static void welford_update(baseline_stat_t *s, float v,
 int baseline_update(baseline_t *b, const packet_t *p) {
     if (!b || !p) return -1;
 
-    /* Derive the regime for the whole packet, once. All samples in
-     * a packet share a regime (a packet represents one tick). */
     uint16_t regime = baseline_regime_for_packet(b, p);
-    if (regime == 0xFFFF) {
-        /* At least one regime channel missing. Skip the whole packet
-         * rather than update the wrong slot. */
-        return 0;
-    }
+    if (regime == 0xFFFF) return 0;
 
     int accepted = 0;
     for (uint16_t i = 0; i < p->channel_count; i++) {
@@ -176,7 +171,7 @@ int baseline_update(baseline_t *b, const packet_t *p) {
         if (!(sample->flags & CH_FLAG_VALID)) continue;
 
         uint16_t slot = find_or_register_slot(b, sample->channel_id);
-        if (slot == 0xFFFF) continue;   /* model full */
+        if (slot == 0xFFFF) continue;
 
         uint64_t ts = sample->timestamp_ns ? sample->timestamp_ns
                                            : p->timestamp_ns;
@@ -186,15 +181,12 @@ int baseline_update(baseline_t *b, const packet_t *p) {
         welford_update(stat, sample_as_f32(sample), ts);
         accepted++;
 
-        /* Bump the regime sample counter the first time this regime
-         * sees any sample. Track per-channel highest regime used. */
         if (was_empty) b->regime_sample_count[regime]++;
         if (regime + 1 > b->channels[slot].n_regimes_used) {
             b->channels[slot].n_regimes_used = regime + 1;
         }
     }
 
-    /* Recompute header regime_count. Cheap, called on every update. */
     uint16_t rc = 0;
     for (uint16_t i = 0; i < BASELINE_MAX_REGIMES; i++) {
         if (b->regime_sample_count[i] > 0) rc++;
@@ -202,6 +194,54 @@ int baseline_update(baseline_t *b, const packet_t *p) {
     b->header.regime_count = rc;
 
     return accepted;
+}
+
+static void decay_slot(baseline_stat_t *s, uint64_t dt_ns,
+                       uint64_t halflife_ns) {
+    if (s->state == BASELINE_EMPTY) return;
+    if (dt_ns == 0 || halflife_ns == 0) return;
+    if (s->count <= 0.0f) return;
+
+    /* factor = 2 ^ (-dt / halflife). Compute as exp(-ln2 * dt/hl). */
+    double exponent = -0.6931471805599453 * ((double)dt_ns / (double)halflife_ns);
+    double factor_d = exp(exponent);
+    if (factor_d > 1.0) factor_d = 1.0;
+    if (factor_d < 0.0) factor_d = 0.0;
+    float factor = (float)factor_d;
+
+    s->count *= factor;
+    s->m2    *= factor;
+
+    /* Extend last_ts_ns so the next decay call measures from here,
+     * not from the last sample's timestamp. */
+    s->last_ts_ns += dt_ns;
+
+    /* READY slots that decay below the threshold go STALE. */
+    if (s->state == BASELINE_READY &&
+        s->count < (float)BASELINE_MIN_SAMPLES) {
+        s->state = BASELINE_STALE;
+    }
+}
+
+void baseline_decay(baseline_t *b, uint64_t now_ns) {
+    if (!b) return;
+    uint64_t halflife = b->header.halflife_ns;
+    if (halflife == 0) return;
+
+    for (uint16_t slot = 0; slot < b->next_slot; slot++) {
+        for (uint16_t r = 0; r < BASELINE_MAX_REGIMES; r++) {
+            baseline_stat_t *s = &b->stats[slot][r];
+            if (s->state == BASELINE_EMPTY) continue;
+            if (now_ns <= s->last_ts_ns) continue;
+            uint64_t dt = now_ns - s->last_ts_ns;
+            decay_slot(s, dt, halflife);
+        }
+    }
+}
+
+float baseline_effective_count(const baseline_stat_t *s) {
+    if (!s) return 0.0f;
+    return s->count;
 }
 
 float baseline_variance(const baseline_stat_t *s) {

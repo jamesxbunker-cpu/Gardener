@@ -200,4 +200,21 @@ uint16_t baseline_channel_count(const baseline_t *b);
 /* Number of non-empty regime slots (used for stats). */
 uint16_t baseline_regime_count(const baseline_t *b);
 
+/* Decay all slots toward the given time. For each slot:
+ *   - if the slot is EMPTY, skip
+ *   - dt = now_ns - last_ts_ns (clamped to >= 0)
+ *   - factor = pow(0.5, dt / halflife_ns)
+ *   - count *= factor, m2 *= factor
+ *   - READY slots whose count falls below BASELINE_MIN_SAMPLES go to STALE
+ *
+ * Called periodically by C5 (default every 30 s), and on save (C4).
+ * Safe to call at any frequency; calling it twice in quick succession
+ * just applies two small decays that compose to one. */
+void baseline_decay(baseline_t *b, uint64_t now_ns);
+
+/* Effective sample count for a slot, after decay. Equivalent to
+ * stat->count. Provided as a named function so callers don't think
+ * the raw count field is an integer. Returns 0 for NULL. */
+float baseline_effective_count(const baseline_stat_t *s);
+
 #endif /* GARDENER_BASELINE_H */

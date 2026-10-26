@@ -794,6 +794,44 @@ build test_baseline_regimes.exe: C_EXECUTABLE_LINKER__test_baseline_regimes_Debu
   TARGET_PDB = test_baseline_regimes.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_baseline_regimes.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_baseline_decay
+
+
+#############################################
+# Order-only phony target for test_baseline_decay
+
+build cmake_object_order_depends_target_test_baseline_decay: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_baseline_decay.dir/tests/test_baseline_decay.c.obj: C_COMPILER__test_baseline_decay_unscanned_Debug D$:/VS_Code/Gardener/tests/test_baseline_decay.c || cmake_object_order_depends_target_test_baseline_decay
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_baseline_decay.dir\tests\test_baseline_decay.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_baseline_decay.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_baseline_decay.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_baseline_decay.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_baseline_decay
+
+
+#############################################
+# Link the executable test_baseline_decay.exe
+
+build test_baseline_decay.exe: C_EXECUTABLE_LINKER__test_baseline_decay_Debug CMakeFiles/test_baseline_decay.dir/tests/test_baseline_decay.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lm  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_baseline_decay.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_baseline_decay.exe
+  TARGET_IMPLIB = libtest_baseline_decay.dll.a
+  TARGET_PDB = test_baseline_decay.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_baseline_decay.dir
+
 
 #############################################
 # Utility command for test
@@ -843,6 +881,8 @@ build gardener_core: phony libgardener_core.a
 
 build test_baseline: phony test_baseline.exe
 
+build test_baseline_decay: phony test_baseline_decay.exe
+
 build test_baseline_format: phony test_baseline_format.exe
 
 build test_baseline_regimes: phony test_baseline_regimes.exe
@@ -877,7 +917,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe test_baseline_regimes.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe test_baseline_regimes.exe test_baseline_decay.exe
 
 # =============================================================================
 # Built-in targets
