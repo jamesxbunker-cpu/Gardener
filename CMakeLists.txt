@@ -91,3 +91,7 @@ add_test(NAME baseline_format COMMAND test_baseline_format)
 add_executable(test_baseline tests/test_baseline.c)     # C1
 target_link_libraries(test_baseline PRIVATE gardener_core m)
 add_test(NAME baseline COMMAND test_baseline)
+
+add_executable(test_baseline_regimes tests/test_baseline_regimes.c)     # C2
+target_link_libraries(test_baseline_regimes PRIVATE gardener_core m)
+add_test(NAME baseline_regimes COMMAND test_baseline_regimes)

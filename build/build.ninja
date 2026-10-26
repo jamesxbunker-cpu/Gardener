@@ -756,6 +756,44 @@ build test_baseline.exe: C_EXECUTABLE_LINKER__test_baseline_Debug CMakeFiles/tes
   TARGET_PDB = test_baseline.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_baseline.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_baseline_regimes
+
+
+#############################################
+# Order-only phony target for test_baseline_regimes
+
+build cmake_object_order_depends_target_test_baseline_regimes: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_baseline_regimes.dir/tests/test_baseline_regimes.c.obj: C_COMPILER__test_baseline_regimes_unscanned_Debug D$:/VS_Code/Gardener/tests/test_baseline_regimes.c || cmake_object_order_depends_target_test_baseline_regimes
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_baseline_regimes.dir\tests\test_baseline_regimes.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_baseline_regimes.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_baseline_regimes.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_baseline_regimes.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_baseline_regimes
+
+
+#############################################
+# Link the executable test_baseline_regimes.exe
+
+build test_baseline_regimes.exe: C_EXECUTABLE_LINKER__test_baseline_regimes_Debug CMakeFiles/test_baseline_regimes.dir/tests/test_baseline_regimes.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lm  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_baseline_regimes.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_baseline_regimes.exe
+  TARGET_IMPLIB = libtest_baseline_regimes.dll.a
+  TARGET_PDB = test_baseline_regimes.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_baseline_regimes.dir
+
 
 #############################################
 # Utility command for test
@@ -807,6 +845,8 @@ build test_baseline: phony test_baseline.exe
 
 build test_baseline_format: phony test_baseline_format.exe
 
+build test_baseline_regimes: phony test_baseline_regimes.exe
+
 build test_ingest: phony test_ingest.exe
 
 build test_log_format: phony test_log_format.exe
@@ -837,7 +877,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe test_baseline_regimes.exe
 
 # =============================================================================
 # Built-in targets

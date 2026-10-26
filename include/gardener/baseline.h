@@ -139,71 +139,65 @@ typedef struct {
 
 /* ---- in-memory model ---------------------------------------------- */
 
-/* The full model: header + per-channel entries + stats. ~130 KB. */
 typedef struct {
     baseline_header_t        header;
     baseline_channel_entry_t channels[BASELINE_MAX_CHANNELS];
     baseline_stat_t          stats[BASELINE_MAX_CHANNELS][BASELINE_MAX_REGIMES];
 
-    /* Derived at init time. slot_to_ch_id[i] is the channel id in
-     * slot i, or 0 if unused. Channel id 0 is reserved (never valid)
-     * so 0 works as a sentinel. */
     uint16_t                 slot_to_ch_id[BASELINE_MAX_CHANNELS];
-    uint16_t                 next_slot;    /* next unused slot, or BASELINE_MAX_CHANNELS if full */
+    uint16_t                 next_slot;
+
+    /* Derived at init from the registry. Kept in memory for fast
+     * regime derivation on every packet. */
+    uint16_t                 regime_ch_ids[BASELINE_MAX_REGIME_CH];
+    uint8_t                  regime_ch_count;
+
+    /* Per-regime counter of samples seen (used to fill the header's
+     * regime_count on save). Reset to zero on init. */
+    uint64_t                 regime_sample_count[BASELINE_MAX_REGIMES];
 } baseline_t;
-
-/* ---- compile-time invariants -------------------------------------- */
-
-_Static_assert(sizeof(baseline_header_t) == BASELINE_HEADER_SIZE,
-               "baseline_header_t must be 64 bytes");
-_Static_assert(sizeof(baseline_channel_entry_t) == BASELINE_CHANNEL_ENTRY_SIZE,
-               "baseline_channel_entry_t must be 8 bytes");
-_Static_assert(sizeof(baseline_stat_t) == BASELINE_STAT_SIZE,
-               "baseline_stat_t must be 40 bytes");
-_Static_assert(BASELINE_FILE_SIZE == BASELINE_HEADER_SIZE
-                                    + BASELINE_MAX_CHANNELS * BASELINE_CHANNEL_ENTRY_SIZE
-                                    + BASELINE_MAX_CHANNELS * BASELINE_MAX_REGIMES * BASELINE_STAT_SIZE
-                                    + 4,
-               "file size must match layout");
 
 /* ---- API ---------------------------------------------------------- */
 
-/* Initialize a baseline model. All slots start EMPTY. No registry is
- * needed: channels register lazily as baseline_update sees them.
+/* Initialize a baseline model. Populates regime channels from the
+ * registry: any channel with is_regime = true, up to
+ * BASELINE_MAX_REGIME_CH. Extras are ignored with a warning.
  *
- * halflife_ns = 0 uses BASELINE_DEFAULT_HALFLIFE_NS. Used only in C3;
- * C1 ignores it.
- *
- * Returns 0 on success, -1 on error (currently: only NULL argument). */
-int baseline_init(baseline_t *b, uint64_t halflife_ns);
+ * registry may be NULL (no regime channels; single-regime model).
+ * halflife_ns = 0 uses BASELINE_DEFAULT_HALFLIFE_NS. */
+int baseline_init(baseline_t *b, const registry_t *registry,
+                  uint64_t halflife_ns);
 
-/* Feed one packet. For every sample:
- *   - find or create a slot for the channel
- *   - update slot 0 (single regime in C1)
- *   - track first/last timestamps, min, max
- *   - transition state: EMPTY → LEARNING at first sample,
- *                       LEARNING → READY at BASELINE_MIN_SAMPLES
+/* Feed one packet. For every valid sample:
+ *   - derive the current regime from the packet's regime-channel values
+ *   - find or register the channel's slot
+ *   - update the (channel, regime) slot
+ *   - transition state as in C1
  *
- * Returns the number of samples accepted (0 if packet had none),
- * or -1 on error. */
+ * Returns number of samples accepted, or -1 on error. */
 int baseline_update(baseline_t *b, const packet_t *p);
 
-/* Variance of a slot. Returns 0 if count < 2. Uses M2 / (count - 1)
- * (sample variance; not population). */
+/* Variance / stddev: same as C1. */
 float baseline_variance(const baseline_stat_t *s);
-
-/* Standard deviation of a slot. */
 float baseline_stddev(const baseline_stat_t *s);
 
-/* Lookup: find the stat slot for a channel id, or NULL if the channel
- * has never been seen.
- *
- * In C1, regime is ignored (only slot 0 exists). In C2, regime selects
- * the appropriate slot. The signature is stable across C1–C3. */
+/* Lookup: find the stat slot for (channel, regime). Returns NULL if
+ * the channel is unknown or that regime slot is EMPTY. */
 const baseline_stat_t *baseline_get(const baseline_t *b, uint16_t ch_id,
                                     uint16_t regime);
 
-/* Number of channels currently registered (have at least one sample). */
+/* Derive the current regime index from a packet. Returns 0 if the
+ * baseline has no regime channels configured. Otherwise hashes the
+ * regime-channel values and returns the result mod BASELINE_MAX_REGIMES.
+ *
+ * If any regime channel is missing from the packet, returns 0xFFFF
+ * (unknown regime). Callers should skip that packet's samples. */
+uint16_t baseline_regime_for_packet(const baseline_t *b, const packet_t *p);
+
+/* Number of channels registered (have at least one sample). */
 uint16_t baseline_channel_count(const baseline_t *b);
+
+/* Number of non-empty regime slots (used for stats). */
+uint16_t baseline_regime_count(const baseline_t *b);
 
 #endif /* GARDENER_BASELINE_H */
