@@ -671,6 +671,44 @@ build test_main_args.exe: C_EXECUTABLE_LINKER__test_main_args_Debug CMakeFiles/t
   TARGET_PDB = test_main_args.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_main_args.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_baseline_format
+
+
+#############################################
+# Order-only phony target for test_baseline_format
+
+build cmake_object_order_depends_target_test_baseline_format: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_baseline_format.dir/tests/test_baseline_format.c.obj: C_COMPILER__test_baseline_format_unscanned_Debug D$:/VS_Code/Gardener/tests/test_baseline_format.c || cmake_object_order_depends_target_test_baseline_format
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_baseline_format.dir\tests\test_baseline_format.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_baseline_format.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_baseline_format.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_baseline_format.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_baseline_format
+
+
+#############################################
+# Link the executable test_baseline_format.exe
+
+build test_baseline_format.exe: C_EXECUTABLE_LINKER__test_baseline_format_Debug CMakeFiles/test_baseline_format.dir/tests/test_baseline_format.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_baseline_format.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_baseline_format.exe
+  TARGET_IMPLIB = libtest_baseline_format.dll.a
+  TARGET_PDB = test_baseline_format.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_baseline_format.dir
+
 
 #############################################
 # Utility command for test
@@ -718,6 +756,8 @@ build gardener-log: phony gardener-log.exe
 
 build gardener_core: phony libgardener_core.a
 
+build test_baseline_format: phony test_baseline_format.exe
+
 build test_ingest: phony test_ingest.exe
 
 build test_log_format: phony test_log_format.exe
@@ -748,7 +788,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe
 
 # =============================================================================
 # Built-in targets

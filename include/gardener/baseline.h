@@ -41,8 +41,8 @@
 #define BASELINE_MAX_REGIMES    16
 #define BASELINE_MAX_REGIME_CH  4             /* max channels in the regime key */
 
-/* Per-(channel, regime) statistics slot. 32 bytes, packed. */
-#define BASELINE_STAT_SIZE      32
+/* Per-(channel, regime) statistics slot. 40 bytes, packed. */
+#define BASELINE_STAT_SIZE      40
 
 /* Per-channel table entry. 8 bytes, packed. */
 #define BASELINE_CHANNEL_ENTRY_SIZE  8
@@ -78,20 +78,20 @@ typedef enum {
 /* ---- on-disk types ------------------------------------------------ */
 
 /* Header, 64 bytes, packed. */
-#pragma pack(push, 1)
 typedef struct {
-    uint32_t magic;             /* BASELINE_MAGIC */
-    uint16_t version;           /* BASELINE_VERSION */
-    uint16_t header_size;       /* BASELINE_HEADER_SIZE */
-    uint32_t channel_count;     /* number of channels with any baseline data */
-    uint32_t regime_count;      /* number of non-empty regimes */
-    uint64_t created_ns;        /* wall clock at creation */
-    uint64_t saved_ns;          /* wall clock at last save */
-    uint64_t halflife_ns;       /* decay half-life */
-    uint16_t regime_ch_ids[BASELINE_MAX_REGIME_CH];  /* channels used for regime key */
-    uint8_t  regime_ch_count;   /* number of valid ids above */
-    uint8_t  _pad[64 - 40];
-    uint32_t _reserved;         /* for future use, keep struct at 64 B */
+    uint32_t magic;                          /* 0 */
+    uint16_t version;                        /* 4 */
+    uint16_t header_size;                    /* 6 */
+    uint32_t channel_count;                  /* 8 */
+    uint32_t regime_count;                   /* 12 */
+    uint64_t created_ns;                     /* 16 */
+    uint64_t saved_ns;                       /* 24 */
+    uint64_t halflife_ns;                    /* 32 */
+    uint16_t regime_ch_ids[BASELINE_MAX_REGIME_CH];  /* 40 */
+    uint8_t  regime_ch_count;                /* 48 */
+    uint8_t  _pad1[3];                       /* 49..51 */
+    uint32_t _reserved;                      /* 52 */
+    uint8_t  _pad2[BASELINE_HEADER_SIZE - 56];  /* 56..63 */
 } baseline_header_t;
 
 /* Channel table entry, 8 bytes. */
@@ -118,19 +118,20 @@ typedef struct {
  */
 #pragma pack(push, 1)
 typedef struct {
-    float    count;
-    float    mean;
-    float    m2;
-    float    min_val;
-    float    max_val;
-    uint64_t first_ts_ns;
-    uint64_t last_ts_ns;
-    uint8_t  state;
-    uint8_t  flags;
-    uint16_t _pad;
+    float    count;         /* 0 */
+    float    mean;          /* 4 */
+    float    m2;            /* 8 */
+    float    min_val;       /* 12 */
+    float    max_val;       /* 16 */
+    uint64_t first_ts_ns;   /* 20 */
+    uint64_t last_ts_ns;    /* 28 */
+    uint8_t  state;         /* 36 */
+    uint8_t  flags;         /* 37 */
+    uint16_t _pad;          /* 38..39 */
 } baseline_stat_t;
 #pragma pack(pop)
 
+#pragma pack(push, 1)
 typedef struct {
     uint32_t crc;               /* CRC-16/MODBUS over [0, BASELINE_TRAILER_OFF) */
 } baseline_trailer_t;
@@ -158,7 +159,10 @@ _Static_assert(sizeof(baseline_channel_entry_t) == BASELINE_CHANNEL_ENTRY_SIZE,
                "baseline_channel_entry_t must be 8 bytes");
 _Static_assert(sizeof(baseline_stat_t) == BASELINE_STAT_SIZE,
                "baseline_stat_t must be 32 bytes");
-_Static_assert(BASELINE_FILE_SIZE == 64 + 256 * 8 + 256 * 16 * 32 + 4,
+_Static_assert(BASELINE_FILE_SIZE == BASELINE_HEADER_SIZE
+                                    + BASELINE_MAX_CHANNELS * BASELINE_CHANNEL_ENTRY_SIZE
+                                    + BASELINE_MAX_CHANNELS * BASELINE_MAX_REGIMES * BASELINE_STAT_SIZE
+                                    + 4,
                "file size must match layout");
 
 /* ---- API stubs (declarations only; implemented in C1–C4) ---------- */
