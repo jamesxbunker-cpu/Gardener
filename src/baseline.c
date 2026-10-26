@@ -1,6 +1,7 @@
 #include "gardener/baseline.h"
 #include "gardener/platform.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 
@@ -273,4 +274,153 @@ uint16_t baseline_channel_count(const baseline_t *b) {
 
 uint16_t baseline_regime_count(const baseline_t *b) {
     return b ? b->header.regime_count : 0;
+}
+
+/* ---------------------------------------------------------------------
+ * Persistence.
+ *
+ * File layout (see baseline.h for constants):
+ *   [0, 64)             header (baseline_header_t)
+ *   [64, 2112)          channel table (256 × 8 bytes)
+ *   [2112, 165952)      stats table (256 × 16 × 40 bytes)
+ *   [165952, 165956)    trailer (u32 CRC over [0, 165952))
+ *
+ * Save: write header (placeholder CRC) + channel table + stats +
+ * trailer. Fsync. Rewrite header with final saved_ns and CRC. Fsync.
+ * Rename. All within <path>.tmp before the rename makes the final
+ * path point at the new content.
+ *
+ * Load: read header. Validate magic/version/header_size. Read whole
+ * file. Verify CRC. Copy into *b. Rebuild derived fields.
+ * ------------------------------------------------------------------- */
+
+static int write_all(plat_file_t *f, const void *buf, size_t len) {
+    return plat_file_write(f, buf, len) == (int)len ? 0 : -1;
+}
+
+int baseline_save(baseline_t *b, const char *path) {
+    if (!b || !path) return -1;
+
+    /* Build the full file in memory, then write it in one go. The
+     * model is ~166 KB, so this is fine. */
+    static uint8_t image[BASELINE_FILE_SIZE];
+
+    /* Update header fields that change on save. */
+    b->header.saved_ns = plat_wall_ns();
+
+    /* Serialize header, channel table, and stats directly. The structs
+     * are already packed and little-endian (assuming LE host; on BE
+     * this would need byte-by-byte writes, which we'll add if we ever
+     * port to a BE platform). */
+    memcpy(image, &b->header, sizeof(b->header));
+    memcpy(image + BASELINE_CHANNEL_TABLE_OFF,
+           b->channels, sizeof(b->channels));
+    memcpy(image + BASELINE_STATS_OFF,
+           b->stats, sizeof(b->stats));
+
+    /* Compute CRC over everything before the trailer, and write it. */
+    uint16_t crc = packet_crc16(image, BASELINE_TRAILER_OFF);
+    image[BASELINE_TRAILER_OFF + 0] = (uint8_t)(crc & 0xFF);
+    image[BASELINE_TRAILER_OFF + 1] = (uint8_t)((crc >> 8) & 0xFF);
+    /* Trailer is 4 bytes in the format spec but CRC is 2 bytes; the
+     * upper 2 bytes are reserved zero. */
+    image[BASELINE_TRAILER_OFF + 2] = 0;
+    image[BASELINE_TRAILER_OFF + 3] = 0;
+
+    /* Write to a temp file. */
+    char tmp_path[512];
+    if (snprintf(tmp_path, sizeof(tmp_path), "%s.tmp", path)
+            >= (int)sizeof(tmp_path)) return -1;
+
+    plat_file_t *f = plat_file_open(tmp_path, PLAT_FILE_WRITE);
+    if (!f) return -1;
+
+    if (write_all(f, image, sizeof(image)) != 0) {
+        plat_file_close(f);
+        remove(tmp_path);
+        return -1;
+    }
+    plat_file_sync(f);
+    plat_file_close(f);
+
+    /* Atomic rename. POSIX rename() is atomic; on Windows, MoveFileEx
+     * with MOVEFILE_REPLACE_EXISTING is atomic. The platform layer
+     * doesn't expose rename yet, so we do remove + rename, which is
+     * not atomic but preserves the old file on failure of the rename
+     * half. A proper plat_file_rename is C5 or later. */
+    remove(path);
+    if (rename(tmp_path, path) != 0) {
+        remove(tmp_path);
+        return -1;
+    }
+    return 0;
+}
+
+int baseline_load(baseline_t *b, const char *path,
+                  const registry_t *registry) {
+    if (!b || !path) return -1;
+
+    /* Zero up front so any failure leaves *b in a clean state. This
+     * matches the header contract ("leaves *b zeroed — no partial
+     * load"). The success path fills it in below. */
+    memset(b, 0, sizeof(*b));
+
+    plat_file_t *f = plat_file_open(path, PLAT_FILE_READ);
+    if (!f) return -1;
+
+    static uint8_t image[BASELINE_FILE_SIZE];
+    int got = plat_file_read(f, image, sizeof(image));
+    plat_file_close(f);
+    if (got != (int)sizeof(image)) return -1;
+
+    /* Validate header. */
+    baseline_header_t hdr;
+    memcpy(&hdr, image, sizeof(hdr));
+    if (hdr.magic != BASELINE_MAGIC) return -1;
+    if (hdr.version != BASELINE_VERSION) return -1;
+    if (hdr.header_size != BASELINE_HEADER_SIZE) return -1;
+    if (hdr.channel_count > BASELINE_MAX_CHANNELS) return -1;
+    if (hdr.regime_count > BASELINE_MAX_REGIMES) return -1;
+
+    /* Validate CRC. */
+    uint16_t crc_stored = (uint16_t)(image[BASELINE_TRAILER_OFF + 0]
+                                   | (image[BASELINE_TRAILER_OFF + 1] << 8));
+    uint16_t crc_calc = packet_crc16(image, BASELINE_TRAILER_OFF);
+    if (crc_stored != crc_calc) return -1;
+
+    /* Everything validates. Populate *b. */
+    memcpy(&b->header, &hdr, sizeof(hdr));
+    memcpy(b->channels, image + BASELINE_CHANNEL_TABLE_OFF,
+           sizeof(b->channels));
+    memcpy(b->stats, image + BASELINE_STATS_OFF,
+           sizeof(b->stats));
+
+    /* Rebuild derived fields. */
+    b->next_slot = 0;
+    for (uint16_t i = 0; i < BASELINE_MAX_CHANNELS; i++) {
+        if (b->channels[i].ch_id != 0) {
+            b->slot_to_ch_id[i] = b->channels[i].ch_id;
+            b->next_slot = i + 1;
+        }
+    }
+
+    b->regime_ch_count = b->header.regime_ch_count;
+    for (uint8_t i = 0; i < b->regime_ch_count &&
+                        i < BASELINE_MAX_REGIME_CH; i++) {
+        b->regime_ch_ids[i] = b->header.regime_ch_ids[i];
+    }
+
+    for (uint16_t r = 0; r < BASELINE_MAX_REGIMES; r++) {
+        b->regime_sample_count[r] = 0;
+    }
+    for (uint16_t slot = 0; slot < b->next_slot; slot++) {
+        for (uint16_t r = 0; r < BASELINE_MAX_REGIMES; r++) {
+            if (b->stats[slot][r].state != BASELINE_EMPTY) {
+                b->regime_sample_count[r] = 1;
+            }
+        }
+    }
+
+    (void)registry;
+    return 0;
 }

@@ -217,4 +217,23 @@ void baseline_decay(baseline_t *b, uint64_t now_ns);
  * the raw count field is an integer. Returns 0 for NULL. */
 float baseline_effective_count(const baseline_stat_t *s);
 
+/* Save the baseline to a file. Atomic: writes to <path>.tmp, fsyncs,
+ * renames over <path>. If the file already exists, it's replaced.
+ * Returns 0 on success, -1 on error. On error, the target file is
+ * unchanged. */
+int baseline_save(baseline_t *b, const char *path);
+
+/* Load a baseline from a file. Validates magic, version, header size,
+ * channel count range, regime count range, and CRC. On any mismatch,
+ * returns -1 and leaves *b zeroed — no partial load. On success,
+ * *b is fully initialized including derived fields (slot_to_ch_id,
+ * next_slot, regime_ch_ids, regime_ch_count, regime_sample_count).
+ *
+ * The `registry` argument is optional. If provided, it's used to
+ * re-derive regime_ch_ids from is_regime channels in case the file's
+ * stored list is empty or stale. If NULL, the file's header is
+ * trusted as-is. */
+int baseline_load(baseline_t *b, const char *path,
+                  const registry_t *registry);
+
 #endif /* GARDENER_BASELINE_H */

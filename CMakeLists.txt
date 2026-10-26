@@ -99,3 +99,7 @@ add_test(NAME baseline_regimes COMMAND test_baseline_regimes)
 add_executable(test_baseline_decay tests/test_baseline_decay.c)     # C3
 target_link_libraries(test_baseline_decay PRIVATE gardener_core m)
 add_test(NAME baseline_decay COMMAND test_baseline_decay)
+
+add_executable(test_baseline_persist tests/test_baseline_persist.c)     # C4
+target_link_libraries(test_baseline_persist PRIVATE gardener_core m)
+add_test(NAME baseline_persist COMMAND test_baseline_persist)

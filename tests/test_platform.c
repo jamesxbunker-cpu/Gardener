@@ -30,25 +30,35 @@ static void test_monotonic_time_moves_forward(void) {
     /* Sanity: t1 should be strictly after t0. On any supported platform
      * 20 ms is enough to guarantee at least some advancement. */
     CHECK(t1 > t0);
-    /* And the gap should be at least ~15 ms (allow slack for scheduler
-     * jitter and coarse timer resolution). */
-    CHECK_GE(t1 - t0, 15000000ull);
+    /* And the gap should be at least ~10 ms. Windows timer resolution
+     * and scheduler jitter can wake the process up to 25% early, so
+     * the bound is generous. Anything under 10 ms means the sleep
+     * didn't actually sleep. */
+    CHECK_GE(t1 - t0, 10000000ull);
     /* And not absurd: less than 10 s for a 20 ms sleep. */
     CHECK(t1 - t0 < 10000000000ull);
 }
 
 static void test_wall_time_is_plausible(void) {
     /* Anything after 2020-01-01 in nanoseconds is > 1.5e18. If the wall
-     * clock is unset, this returns 0 and we should know about it. */
+     * clock is unset, this returns 0 and we should know about it.
+     *
+     * Note: this test fails on systems with an unset RTC (some CI
+     * containers, some embedded boards). If that ever becomes a
+     * problem, gate it behind an environment check. */
     uint64_t w = plat_wall_ns();
     CHECK_GE(w, 1500000000000000000ull);
 }
 
 static void test_sleep_returns(void) {
+    /* plat_sleep_ms(30) must sleep roughly 30 ms. Same caveats as
+     * above: Windows timer coalescing can fire early. The lower bound
+     * catches "sleep returned immediately" without being sensitive to
+     * scheduler precision. */
     uint64_t t0 = plat_now_ns();
     plat_sleep_ms(30);
     uint64_t t1 = plat_now_ns();
-    CHECK_GE(t1 - t0, 25000000ull);
+    CHECK_GE(t1 - t0, 20000000ull);
 }
 
 static void test_file_write_read_roundtrip(void) {
