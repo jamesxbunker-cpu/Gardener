@@ -2,6 +2,7 @@ D:/VS_Code/Gardener/build/CMakeFiles/gardener_core.dir
 D:/VS_Code/Gardener/build/CMakeFiles/gardener.dir
 D:/VS_Code/Gardener/build/CMakeFiles/gardener-dump.dir
 D:/VS_Code/Gardener/build/CMakeFiles/gardener-log.dir
+D:/VS_Code/Gardener/build/CMakeFiles/gardener-stats.dir
 D:/VS_Code/Gardener/build/CMakeFiles/test_platform.dir
 D:/VS_Code/Gardener/build/CMakeFiles/test_ring.dir
 D:/VS_Code/Gardener/build/CMakeFiles/test_registry.dir

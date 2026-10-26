@@ -1,11 +1,11 @@
 # ninja log v7
 32	396	8128689651969476	CMakeFiles/gardener_core.dir/src/platform/log.c.obj	a63cb0719a37dcb5
-43	329	8143366418026250	CMakeFiles/gardener.dir/src/main.c.obj	49ae9c5c5e6f515c
+12	226	8146835121332331	CMakeFiles/gardener.dir/src/main.c.obj	49ae9c5c5e6f515c
 23	717	8143360649846167	CMakeFiles/gardener_core.dir/src/platform/platform_posix.c.obj	35ad8319d48e5a6b
 27	249	8146828838339918	CMakeFiles/test_platform.dir/tests/test_platform.c.obj	7c3fa5683f703c53
 222	516	8146827612468061	libgardener_core.a	8247d290dd1fa236
 250	565	8146828840513070	test_platform.exe	552c94b8c9fa806d
-516	1178	8146827615482045	gardener.exe	cf77865d1f38b1af
+227	493	8146835123394064	gardener.exe	cf77865d1f38b1af
 32	384	8143360649961536	CMakeFiles/gardener_core.dir/src/ring.c.obj	5632ad08fe00335d
 826	1457	8143360657911599	CMakeFiles/test_ring.dir/tests/test_ring.c.obj	1bef474a388892ad
 569	1319	8146827616038852	test_ring.exe	a0687a2095918b7d
@@ -20,9 +20,9 @@
 56	584	8143360650261086	CMakeFiles/gardener_core.dir/src/packet.c.obj	9b92a9818f9351a9
 1155	1631	8143360661187910	CMakeFiles/test_packet_json.dir/tests/test_packet_json.c.obj	e71262299f6266a6
 1211	2132	8146827622630701	test_packet_json.exe	ba4a18d2ab2c8b2f
-3	410	8146830135720177	build.ninja	97e064793b4a8372
-3	410	8146830135579621	D:/VS_Code/Gardener/build/cmake_install.cmake	97e064793b4a8372
-3	410	8146830135609658	D:/VS_Code/Gardener/build/CTestTestfile.cmake	97e064793b4a8372
+3	304	8146836276681560	build.ninja	97e064793b4a8372
+3	304	8146836276449727	D:/VS_Code/Gardener/build/cmake_install.cmake	97e064793b4a8372
+3	304	8146836276449727	D:/VS_Code/Gardener/build/CTestTestfile.cmake	97e064793b4a8372
 1169	1658	8143360661510350	CMakeFiles/test_packet_bin.dir/tests/test_packet_bin.c.obj	7f6cd84f0b21367
 1250	2190	8146827622863897	test_packet_bin.exe	bf16da38d3047c71
 1483	1945	8143360664524088	CMakeFiles/test_log_format.dir/tests/test_log_format.c.obj	7b88a81c3eecadc6
@@ -54,18 +54,7 @@
 2332	3020	8146827633633334	test_baseline_decay.exe	b17010fc237bb672
 83	563	8146826660303188	CMakeFiles/test_baseline_persist.dir/tests/test_baseline_persist.c.obj	e6950866d3897a96
 2815	3199	8146827638507544	test_baseline_persist.exe	b2b315b3e0ab1547
-3	304	8146830135720177	build.ninja	97e064793b4a8372
-3	304	8146830135720177	D:/VS_Code/Gardener/build/cmake_install.cmake	97e064793b4a8372
-3	304	8146830135720177	D:/VS_Code/Gardener/build/CTestTestfile.cmake	97e064793b4a8372
-46	276	8146830136659708	CMakeFiles/test_main_baseline.dir/tests/test_main_baseline.c.obj	93a6666494f4b784
-41	425	8146830136599667	CMakeFiles/gardener.dir/src/main.c.obj	49ae9c5c5e6f515c
-281	616	8146830139005686	test_main_baseline.exe	7be2442327be7c2f
-426	718	8146830140454630	gardener.exe	cf77865d1f38b1af
-32	223	8146830684735403	CMakeFiles/test_main_baseline.dir/tests/test_main_baseline.c.obj	93a6666494f4b784
-224	483	8146830686637979	test_main_baseline.exe	7be2442327be7c2f
-29	291	8146830863543248	CMakeFiles/test_main_baseline.dir/tests/test_main_baseline.c.obj	93a6666494f4b784
-292	600	8146830866167253	test_main_baseline.exe	7be2442327be7c2f
 30	223	8146832421261179	CMakeFiles/test_main_baseline.dir/tests/test_main_baseline.c.obj	93a6666494f4b784
 224	487	8146832423149984	test_main_baseline.exe	7be2442327be7c2f
-12	226	8146835121332331	CMakeFiles/gardener.dir/src/main.c.obj	49ae9c5c5e6f515c
-227	493	8146835123394064	gardener.exe	cf77865d1f38b1af
+41	234	8146836292951592	CMakeFiles/gardener-stats.dir/tools/gardener_stats.c.obj	d09fb51481ef11ba
+235	498	8146836294974696	gardener-stats.exe	5ce562cc90f14c1b

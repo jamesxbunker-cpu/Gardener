@@ -37,6 +37,9 @@ target_link_libraries(gardener-dump PRIVATE gardener_core)
 add_executable(gardener-log tools/gardener_log.c)
 target_link_libraries(gardener-log PRIVATE gardener_core)
 
+add_executable(gardener-stats tools/gardener_stats.c)
+target_link_libraries(gardener-stats PRIVATE gardener_core)
+
 # ---- tests ----------------------------------------------------------
 enable_testing()
 
