@@ -144,8 +144,10 @@ typedef struct {
     baseline_channel_entry_t channels[BASELINE_MAX_CHANNELS];
     baseline_stat_t         stats[BASELINE_MAX_CHANNELS][BASELINE_MAX_REGIMES];
 
-    /* Not on disk; derived from the registry at load/init time. */
-    uint16_t                ch_id_to_slot[65536];  /* 0xFFFF = not present */
+        /* Not on disk; derived from the registry at load/init time.
+     * slot_to_ch_id[i] is the channel id in slot i, or 0 if unused.
+     * Channel id 0 is reserved (never valid) so 0 works as a sentinel. */
+    uint16_t                slot_to_ch_id[BASELINE_MAX_CHANNELS];
 } baseline_t;
 
 /* ---- compile-time invariants -------------------------------------- */
