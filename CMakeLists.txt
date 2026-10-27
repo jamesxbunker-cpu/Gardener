@@ -140,3 +140,7 @@ add_test(NAME detect_roc COMMAND test_detect_roc)
 add_executable(test_detect_correlation tests/test_detect_correlation.c)   # D3
 target_link_libraries(test_detect_correlation PRIVATE gardener_core m)
 add_test(NAME detect_correlation COMMAND test_detect_correlation)
+
+add_executable(test_detect_mismatch tests/test_detect_mismatch.c)   # D4
+target_link_libraries(test_detect_mismatch PRIVATE gardener_core m)
+add_test(NAME detect_mismatch COMMAND test_detect_mismatch)

@@ -508,6 +508,94 @@ static int check_correlation(detect_t *det,
     return emitted;
 }
 
+static int check_mismatch(detect_t *det,
+                          const packet_t *p,
+                          event_t *events, size_t cap, size_t *n) {
+    if (!det->config.enable_mismatch) return 0;
+    if (det->config.mismatch_pair_count == 0) return 0;
+
+    uint16_t sustained_needed = det->config.mismatch_sustained;
+    if (sustained_needed == 0) sustained_needed = DETECT_DEFAULT_MISMATCH_SUSTAINED;
+
+    int emitted = 0;
+
+    for (uint8_t k = 0; k < det->config.mismatch_pair_count; k++) {
+        uint16_t ctrl_id = det->config.mismatch_pairs[k].ctrl_out;
+        uint16_t act_id  = det->config.mismatch_pairs[k].actuator;
+        float threshold  = det->config.mismatch_pairs[k].threshold;
+        if (threshold <= 0.0f) threshold = DETECT_DEFAULT_MISMATCH_THRESHOLD;
+
+        const sample_t *ctrl_s = NULL;
+        const sample_t *act_s  = NULL;
+        for (uint16_t i = 0; i < p->channel_count; i++) {
+            if (p->samples[i].channel_id == ctrl_id) ctrl_s = &p->samples[i];
+            if (p->samples[i].channel_id == act_id)  act_s  = &p->samples[i];
+        }
+        if (!ctrl_s || !act_s) continue;
+
+        if (ctrl_s->flags & CH_FLAG_STALE) continue;
+        if (!(ctrl_s->flags & CH_FLAG_VALID)) continue;
+        if (act_s->flags & CH_FLAG_STALE) continue;
+        if (!(act_s->flags & CH_FLAG_VALID)) continue;
+
+        float ctrl = sample_as_f32(ctrl_s);
+        float act  = sample_as_f32(act_s);
+        float diff = ctrl - act;
+        float abs_diff = fabsf(diff);
+
+        bool over = (abs_diff > threshold);
+
+        if (over) {
+            if (det->mismatch_state[k].consecutive < 0xFFFF) {
+                det->mismatch_state[k].consecutive++;
+            }
+        } else {
+            det->mismatch_state[k].consecutive = 0;
+        }
+
+        bool should_fire = (det->mismatch_state[k].consecutive >= sustained_needed);
+        bool was = det->mismatch_state[k].in_violation;
+
+        if (should_fire && !was) {
+            event_t e;
+            memset(&e, 0, sizeof(e));
+            event_set_timestamp(&e, plat_wall_ns());
+            event_set_source_ts(&e, p->timestamp_ns);
+            e.channel_id  = ctrl_id;
+            e.channel_id2 = act_id;
+            e.regime      = EVENT_REGIME_NONE;
+            e.observed    = diff;   /* signed; positive = ctrl > act */
+            e.threshold   = threshold;
+            e.detector    = DETECTOR_MISMATCH;
+            e.severity    = (diff > 0.0f) ? SEVERITY_WARN : SEVERITY_INFO;
+            e.state       = EVENT_STATE_STARTED;
+            e.version     = EVENT_VERSION;
+            push_event(det, events, cap, n, &e);
+            det->mismatch_state[k].in_violation = true;
+            emitted++;
+        } else if (!should_fire && was) {
+            event_t e;
+            memset(&e, 0, sizeof(e));
+            event_set_timestamp(&e, plat_wall_ns());
+            event_set_source_ts(&e, p->timestamp_ns);
+            e.channel_id  = ctrl_id;
+            e.channel_id2 = act_id;
+            e.regime      = EVENT_REGIME_NONE;
+            e.observed    = diff;
+            e.threshold   = threshold;
+            e.detector    = DETECTOR_MISMATCH;
+            e.severity    = SEVERITY_INFO;
+            e.state       = EVENT_STATE_CLEARED;
+            e.version     = EVENT_VERSION;
+            push_event(det, events, cap, n, &e);
+            det->mismatch_state[k].in_violation = false;
+            emitted++;
+        }
+    }
+
+    return emitted;
+}
+
 /* ---- top-level update --------------------------------------------- */
 
 int detect_update(detect_t *det,
@@ -537,8 +625,9 @@ int detect_update(detect_t *det,
         check_roc(det, s, ing, p, events, cap, &n_events);
     }
 
-    /* Per-pair detector, once per packet. */
+    /* Per-pair detectors, once per packet. */
     check_correlation(det, p, ing, events, cap, &n_events);
+    check_mismatch(det, p, events, cap, &n_events);
 
     return (int)n_events;
 }
