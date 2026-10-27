@@ -5,6 +5,7 @@
 #include "gardener/event.h"
 #include "gardener/packet.h"
 #include "gardener/registry.h"
+#include "gardener/ingest.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -38,6 +39,12 @@
 #define DETECT_DEFAULT_ZSCORE_THRESHOLD  5.0f
 #define DETECT_DEFAULT_ROC_THRESHOLD     1.0f  /* reserved for D2 */
 
+#define DETECT_FLATLINE_WINDOW   32     /* samples for flatline check */
+#define DETECT_FLATLINE_EPSILON  1e-6f  /* values closer than this are "same" */
+#define DETECT_ROC_WINDOW        16     /* pairs for rate-of-change check */
+#define DETECT_DEFAULT_ROC_ABSOLUTE_MAX  1000.0f   /* per-second fallback */
+#define DETECT_DEFAULT_ROC_FACTOR        10.0f     /* × normal rate */
+
 /* ---- configuration ------------------------------------------------- */
 
 typedef struct {
@@ -53,6 +60,12 @@ typedef struct {
     /* Used only for logging and event generation; set by the caller
      * from the source_id field of the packet or a config file. */
     uint16_t source_id;
+
+    bool enable_flatline;
+    bool enable_roc;
+
+    float roc_absolute_max;   /* per second; used when no baseline rate */
+    float roc_factor;         /* × learned rate; used when available */
 } detect_config_t;
 
 /* ---- per-channel state -------------------------------------------- */
@@ -63,6 +76,9 @@ typedef struct {
 
     /* Z-score detector: is the value currently outside the threshold? */
     bool zscore_in_violation;
+
+    bool flatline_in_violation;
+    bool roc_in_violation;
 } detect_channel_state_t;
 
 /* ---- detector instance -------------------------------------------- */
@@ -119,6 +135,7 @@ void detect_reset(detect_t *det);
  */
 int detect_update(detect_t *det,
                   const packet_t *p,
+                  const ingest_t *ing,
                   const baseline_t *baseline,
                   const registry_t *registry,
                   event_t *events, size_t cap);

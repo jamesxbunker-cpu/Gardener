@@ -128,3 +128,11 @@ add_test(NAME detect_range COMMAND test_detect_range)
 add_executable(test_detect_zscore tests/test_detect_zscore.c)   # D1
 target_link_libraries(test_detect_zscore PRIVATE gardener_core m)
 add_test(NAME detect_zscore COMMAND test_detect_zscore)
+
+add_executable(test_detect_flatline tests/test_detect_flatline.c)   # D2
+target_link_libraries(test_detect_flatline PRIVATE gardener_core m)
+add_test(NAME detect_flatline COMMAND test_detect_flatline)
+
+add_executable(test_detect_roc tests/test_detect_roc.c)             # D2
+target_link_libraries(test_detect_roc PRIVATE gardener_core m)
+add_test(NAME detect_roc COMMAND test_detect_roc)

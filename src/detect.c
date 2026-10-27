@@ -28,7 +28,11 @@ int detect_init(detect_t *det, const detect_config_t *cfg) {
     } else {
         det->config.enable_range = true;
         det->config.enable_zscore = true;
+        det->config.enable_flatline = true;
+        det->config.enable_roc = true;
         det->config.zscore_threshold = DETECT_DEFAULT_ZSCORE_THRESHOLD;
+        det->config.roc_absolute_max = DETECT_DEFAULT_ROC_ABSOLUTE_MAX;
+        det->config.roc_factor = DETECT_DEFAULT_ROC_FACTOR;
         det->config.source_id = 0;
     }
     return 0;
@@ -39,7 +43,11 @@ int detect_init_default(detect_t *det, uint16_t source_id) {
     detect_config_t cfg = {
         .enable_range = true,
         .enable_zscore = true,
+        .enable_flatline = true,
+        .enable_roc = true,
         .zscore_threshold = DETECT_DEFAULT_ZSCORE_THRESHOLD,
+        .roc_absolute_max = DETECT_DEFAULT_ROC_ABSOLUTE_MAX,
+        .roc_factor = DETECT_DEFAULT_ROC_FACTOR,
         .source_id = source_id,
     };
     return detect_init(det, &cfg);
@@ -231,16 +239,167 @@ static int check_zscore(detect_t *det,
     return 0;
 }
 
+/* Flatline: returns 1 if the last FLATLINE_WINDOW samples for this
+ * channel all have the same value (within FLATLINE_EPSILON). Returns
+ * 0 if insufficient history or values differ. */
+static int is_flatline(const ingest_t *ing, uint16_t ch_id) {
+    const channel_state_t *cs = ingest_state(ing, ch_id);
+    if (!cs || !cs->seen) return 0;
+    size_t n = ring_count(&cs->ring);
+    if (n < DETECT_FLATLINE_WINDOW) return 0;
+
+    const sample_t *first = ring_at(&cs->ring, n - DETECT_FLATLINE_WINDOW);
+    if (!first) return 0;
+    float v0 = sample_as_f32(first);
+
+    for (size_t i = n - DETECT_FLATLINE_WINDOW + 1; i < n; i++) {
+        const sample_t *s = ring_at(&cs->ring, i);
+        if (!s) return 0;
+        float vi = sample_as_f32(s);
+        if (fabsf(vi - v0) > DETECT_FLATLINE_EPSILON) return 0;
+    }
+    return 1;
+}
+
+/* Rate of change: computes mean absolute rate over the last
+ * DETECT_ROC_WINDOW pairs. Returns the rate in units per second.
+ * Returns -1 if insufficient history. Timestamps are nanoseconds. */
+static float compute_roc(const ingest_t *ing, uint16_t ch_id) {
+    const channel_state_t *cs = ingest_state(ing, ch_id);
+    if (!cs || !cs->seen) return -1.0f;
+    size_t n = ring_count(&cs->ring);
+    if (n < DETECT_ROC_WINDOW + 1) return -1.0f;
+
+    size_t start = n - DETECT_ROC_WINDOW - 1;
+    float total_rate = 0.0f;
+    int pairs = 0;
+    for (size_t i = start + 1; i < n; i++) {
+        const sample_t *prev = ring_at(&cs->ring, i - 1);
+        const sample_t *cur  = ring_at(&cs->ring, i);
+        if (!prev || !cur) continue;
+        uint64_t dt_ns = cur->timestamp_ns - prev->timestamp_ns;
+        if (dt_ns == 0) continue;
+        float dv = sample_as_f32(cur) - sample_as_f32(prev);
+        float rate = fabsf(dv) / ((float)dt_ns / 1e9f);
+        total_rate += rate;
+        pairs++;
+    }
+    if (pairs == 0) return -1.0f;
+    return total_rate / (float)pairs;
+}
+
+static int check_flatline(detect_t *det, const sample_t *s,
+                          const ingest_t *ing, const packet_t *p,
+                          event_t *events, size_t cap, size_t *n) {
+    if (!det->config.enable_flatline || !ing) return 0;
+    if (s->flags & CH_FLAG_STALE) return 0;
+    if (!(s->flags & CH_FLAG_VALID)) return 0;
+
+    bool flat = is_flatline(ing, s->channel_id);
+    bool was = det->state[s->channel_id].flatline_in_violation;
+
+    if (flat && !was) {
+        event_t e;
+        memset(&e, 0, sizeof(e));
+        event_set_timestamp(&e, plat_wall_ns());
+        event_set_source_ts(&e, p->timestamp_ns);
+        e.channel_id  = s->channel_id;
+        e.channel_id2 = EVENT_CHANNEL_NONE;
+        e.regime      = EVENT_REGIME_NONE;
+        e.observed    = sample_as_f32(s);
+        e.threshold   = DETECT_FLATLINE_EPSILON;
+        e.detector    = DETECTOR_FLATLINE;
+        e.severity    = SEVERITY_WARN;
+        e.state       = EVENT_STATE_STARTED;
+        e.version     = EVENT_VERSION;
+        push_event(det, events, cap, n, &e);
+        det->state[s->channel_id].flatline_in_violation = true;
+        return 1;
+    }
+    if (!flat && was) {
+        event_t e;
+        memset(&e, 0, sizeof(e));
+        event_set_timestamp(&e, plat_wall_ns());
+        event_set_source_ts(&e, p->timestamp_ns);
+        e.channel_id  = s->channel_id;
+        e.channel_id2 = EVENT_CHANNEL_NONE;
+        e.regime      = EVENT_REGIME_NONE;
+        e.observed    = sample_as_f32(s);
+        e.detector    = DETECTOR_FLATLINE;
+        e.severity    = SEVERITY_INFO;
+        e.state       = EVENT_STATE_CLEARED;
+        e.version     = EVENT_VERSION;
+        push_event(det, events, cap, n, &e);
+        det->state[s->channel_id].flatline_in_violation = false;
+        return 1;
+    }
+    return 0;
+}
+
+static int check_roc(detect_t *det, const sample_t *s,
+                     const ingest_t *ing, const packet_t *p,
+                     event_t *events, size_t cap, size_t *n) {
+    if (!det->config.enable_roc || !ing) return 0;
+    if (s->flags & CH_FLAG_STALE) return 0;
+    if (!(s->flags & CH_FLAG_VALID)) return 0;
+
+    float rate = compute_roc(ing, s->channel_id);
+    if (rate < 0.0f) return 0;   /* insufficient history */
+
+    float threshold = det->config.roc_absolute_max;
+    if (threshold <= 0.0f) threshold = DETECT_DEFAULT_ROC_ABSOLUTE_MAX;
+
+    bool outside = (rate > threshold);
+    bool was = det->state[s->channel_id].roc_in_violation;
+
+    if (outside && !was) {
+        event_t e;
+        memset(&e, 0, sizeof(e));
+        event_set_timestamp(&e, plat_wall_ns());
+        event_set_source_ts(&e, p->timestamp_ns);
+        e.channel_id  = s->channel_id;
+        e.channel_id2 = EVENT_CHANNEL_NONE;
+        e.regime      = EVENT_REGIME_NONE;
+        e.observed    = rate;
+        e.threshold   = threshold;
+        e.detector    = DETECTOR_ROC;
+        e.severity    = SEVERITY_WARN;
+        e.state       = EVENT_STATE_STARTED;
+        e.version     = EVENT_VERSION;
+        push_event(det, events, cap, n, &e);
+        det->state[s->channel_id].roc_in_violation = true;
+        return 1;
+    }
+    if (!outside && was) {
+        event_t e;
+        memset(&e, 0, sizeof(e));
+        event_set_timestamp(&e, plat_wall_ns());
+        event_set_source_ts(&e, p->timestamp_ns);
+        e.channel_id  = s->channel_id;
+        e.channel_id2 = EVENT_CHANNEL_NONE;
+        e.regime      = EVENT_REGIME_NONE;
+        e.observed    = rate;
+        e.threshold   = threshold;
+        e.detector    = DETECTOR_ROC;
+        e.severity    = SEVERITY_INFO;
+        e.state       = EVENT_STATE_CLEARED;
+        e.version     = EVENT_VERSION;
+        push_event(det, events, cap, n, &e);
+        det->state[s->channel_id].roc_in_violation = false;
+        return 1;
+    }
+    return 0;
+}
+
 int detect_update(detect_t *det,
                   const packet_t *p,
+                  const ingest_t *ing,
                   const baseline_t *baseline,
                   const registry_t *registry,
                   event_t *events, size_t cap) {
     if (!det || !p || !events) return -1;
 
     size_t n_events = 0;
-
-    /* Derive regime once per packet. */
     uint16_t regime = EVENT_REGIME_NONE;
     if (baseline) {
         uint16_t r = baseline_regime_for_packet(baseline, p);
@@ -252,8 +411,9 @@ int detect_update(detect_t *det,
         if (s->channel_id >= DETECT_MAX_CHANNELS) continue;
 
         check_range(det, s, registry, p, events, cap, &n_events);
-        check_zscore(det, s, baseline, p, events, cap, &n_events,
-                     regime);
+        check_zscore(det, s, baseline, p, events, cap, &n_events, regime);
+        check_flatline(det, s, ing, p, events, cap, &n_events);
+        check_roc(det, s, ing, p, events, cap, &n_events);
     }
 
     return (int)n_events;

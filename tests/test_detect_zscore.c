@@ -1,4 +1,5 @@
 #include "gardener/detect.h"
+#include "gardener/ingest.h"
 #include "gardener/registry.h"
 #include "gardener/baseline.h"
 #include "gardener/packet.h"
@@ -27,6 +28,10 @@ static int g_failures = 0;
     }                                                                 \
 } while (0)
 
+/* Shared ingest instance. Z-score tests don't care about history
+ * (z-score is stateless in that sense) but detect_update requires one. */
+static ingest_t g_ing;
+
 static sample_t mk_f32(uint16_t id, float v, uint64_t ts) {
     sample_t s;
     memset(&s, 0, sizeof(s));
@@ -49,12 +54,10 @@ static packet_t mk_packet(uint64_t ts, const sample_t *s, uint16_t n) {
     return p;
 }
 
-/* Build a baseline with channel 1 having mean=50, stddev~1. Feed 200
- * samples around 50 to get it to READY. No regime channels. */
 static void build_baseline(baseline_t *b) {
     baseline_init(b, NULL, 0);
     for (int i = 0; i < 200; i++) {
-        float v = 50.0f + ((i % 3) - 1) * 0.5f;   /* 49.5, 50.0, 50.5 */
+        float v = 50.0f + ((i % 3) - 1) * 0.5f;
         sample_t s = mk_f32(1, v, (uint64_t)i);
         packet_t p = mk_packet((uint64_t)i, &s, 1);
         baseline_update(b, &p);
@@ -71,12 +74,10 @@ static void test_ready_baseline_fires(void) {
     CHECK(bs != NULL);
     if (bs) CHECK_EQ(bs->state, BASELINE_READY);
 
-    /* Value far from mean: 50 + 10 = 60, z ≈ 10/stddev */
-    /* stddev ≈ 0.408, so z ≈ 24.5. Threshold is 5. Should fire. */
     sample_t s = mk_f32(1, 60.0f, 1000);
     packet_t p = mk_packet(1000, &s, 1);
     event_t events[8];
-    int n = detect_update(&d, &p, &b, NULL, events, 8);
+    int n = detect_update(&d, &p, &g_ing, &b, NULL, events, 8);
     CHECK_EQ(n, 1);
     if (n >= 1) {
         CHECK_EQ(events[0].detector, DETECTOR_ZSCORE);
@@ -98,7 +99,7 @@ static void test_normal_value_no_event(void) {
     sample_t s = mk_f32(1, 50.0f, 1000);
     packet_t p = mk_packet(1000, &s, 1);
     event_t events[8];
-    int n = detect_update(&d, &p, &b, NULL, events, 8);
+    int n = detect_update(&d, &p, &g_ing, &b, NULL, events, 8);
     CHECK_EQ(n, 0);
 }
 
@@ -108,18 +109,16 @@ static void test_not_ready_baseline_no_fire(void) {
 
     static baseline_t b;
     baseline_init(&b, NULL, 0);
-    /* Only 10 samples: LEARNING state. */
     for (int i = 0; i < 10; i++) {
         sample_t s = mk_f32(1, 50.0f, (uint64_t)i);
         packet_t p = mk_packet((uint64_t)i, &s, 1);
         baseline_update(&b, &p);
     }
 
-    /* A wild value. Should not fire because baseline is LEARNING. */
     sample_t s = mk_f32(1, 1000.0f, 1000);
     packet_t p = mk_packet(1000, &s, 1);
     event_t events[8];
-    int n = detect_update(&d, &p, &b, NULL, events, 8);
+    int n = detect_update(&d, &p, &g_ing, &b, NULL, events, 8);
     CHECK_EQ(n, 0);
 }
 
@@ -129,16 +128,14 @@ static void test_clears_when_back_to_normal(void) {
     static baseline_t b;
     build_baseline(&b);
 
-    /* Fire. */
     sample_t s = mk_f32(1, 60.0f, 1000);
     packet_t p = mk_packet(1000, &s, 1);
     event_t events[8];
-    detect_update(&d, &p, &b, NULL, events, 8);
+    detect_update(&d, &p, &g_ing, &b, NULL, events, 8);
 
-    /* Back to normal. */
     s = mk_f32(1, 50.0f, 2000);
     p = mk_packet(2000, &s, 1);
-    int n = detect_update(&d, &p, &b, NULL, events, 8);
+    int n = detect_update(&d, &p, &g_ing, &b, NULL, events, 8);
     CHECK_EQ(n, 1);
     if (n >= 1) {
         CHECK_EQ(events[0].detector, DETECTOR_ZSCORE);
@@ -153,7 +150,7 @@ static void test_no_baseline_no_zscore(void) {
     sample_t s = mk_f32(1, 1000.0f, 1000);
     packet_t p = mk_packet(1000, &s, 1);
     event_t events[8];
-    int n = detect_update(&d, &p, NULL, NULL, events, 8);
+    int n = detect_update(&d, &p, &g_ing, NULL, NULL, events, 8);
     CHECK_EQ(n, 0);
 }
 
@@ -163,12 +160,10 @@ static void test_severity_critical_for_very_far(void) {
     static baseline_t b;
     build_baseline(&b);
 
-    /* 100 is 50 away from mean, stddev ~0.4, z ~ 120. > 2*5=10.
-     * Should fire CRITICAL. */
     sample_t s = mk_f32(1, 100.0f, 1000);
     packet_t p = mk_packet(1000, &s, 1);
     event_t events[8];
-    int n = detect_update(&d, &p, &b, NULL, events, 8);
+    int n = detect_update(&d, &p, &g_ing, &b, NULL, events, 8);
     CHECK_EQ(n, 1);
     if (n >= 1) {
         CHECK_EQ(events[0].severity, SEVERITY_CRITICAL);
@@ -177,6 +172,8 @@ static void test_severity_critical_for_very_far(void) {
 
 int main(void) {
     plat_log_set_level(LOG_ERROR);
+
+    ingest_init(&g_ing, NULL);
 
     test_ready_baseline_fires();
     test_normal_value_no_event();
