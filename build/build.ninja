@@ -1192,6 +1192,44 @@ build test_detect_roc.exe: C_EXECUTABLE_LINKER__test_detect_roc_Debug CMakeFiles
   TARGET_PDB = test_detect_roc.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_detect_roc.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_detect_correlation
+
+
+#############################################
+# Order-only phony target for test_detect_correlation
+
+build cmake_object_order_depends_target_test_detect_correlation: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_detect_correlation.dir/tests/test_detect_correlation.c.obj: C_COMPILER__test_detect_correlation_unscanned_Debug D$:/VS_Code/Gardener/tests/test_detect_correlation.c || cmake_object_order_depends_target_test_detect_correlation
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_detect_correlation.dir\tests\test_detect_correlation.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_detect_correlation.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_detect_correlation.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_detect_correlation.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_detect_correlation
+
+
+#############################################
+# Link the executable test_detect_correlation.exe
+
+build test_detect_correlation.exe: C_EXECUTABLE_LINKER__test_detect_correlation_Debug CMakeFiles/test_detect_correlation.dir/tests/test_detect_correlation.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lm  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_detect_correlation.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_detect_correlation.exe
+  TARGET_IMPLIB = libtest_detect_correlation.dll.a
+  TARGET_PDB = test_detect_correlation.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_detect_correlation.dir
+
 
 #############################################
 # Utility command for test
@@ -1251,6 +1289,8 @@ build test_baseline_persist: phony test_baseline_persist.exe
 
 build test_baseline_regimes: phony test_baseline_regimes.exe
 
+build test_detect_correlation: phony test_detect_correlation.exe
+
 build test_detect_flatline: phony test_detect_flatline.exe
 
 build test_detect_range: phony test_detect_range.exe
@@ -1295,7 +1335,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe gardener-stats.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe test_baseline_regimes.exe test_baseline_decay.exe test_baseline_persist.exe test_main_baseline.exe test_event_format.exe test_event_json.exe test_detect_range.exe test_detect_zscore.exe test_detect_flatline.exe test_detect_roc.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe gardener-stats.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe test_baseline_regimes.exe test_baseline_decay.exe test_baseline_persist.exe test_main_baseline.exe test_event_format.exe test_event_json.exe test_detect_range.exe test_detect_zscore.exe test_detect_flatline.exe test_detect_roc.exe test_detect_correlation.exe
 
 # =============================================================================
 # Built-in targets

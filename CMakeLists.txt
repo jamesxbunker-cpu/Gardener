@@ -136,3 +136,7 @@ add_test(NAME detect_flatline COMMAND test_detect_flatline)
 add_executable(test_detect_roc tests/test_detect_roc.c)             # D2
 target_link_libraries(test_detect_roc PRIVATE gardener_core m)
 add_test(NAME detect_roc COMMAND test_detect_roc)
+
+add_executable(test_detect_correlation tests/test_detect_correlation.c)   # D3
+target_link_libraries(test_detect_correlation PRIVATE gardener_core m)
+add_test(NAME detect_correlation COMMAND test_detect_correlation)
