@@ -22,7 +22,8 @@ add_library(gardener_core STATIC
     src/log_reader.c
     src/replay.c
     src/baseline.c
-    src/event.c                      # D0
+    src/event.c
+    src/detect.c                     # D1
 )
 target_include_directories(gardener_core PUBLIC include)
 
@@ -115,3 +116,15 @@ add_test(NAME main_baseline COMMAND test_main_baseline)
 add_executable(test_event_format tests/test_event_format.c)     # D0
 target_link_libraries(test_event_format PRIVATE gardener_core)
 add_test(NAME event_format COMMAND test_event_format)
+
+add_executable(test_event_json tests/test_event_json.c)
+target_link_libraries(test_event_json PRIVATE gardener_core)
+add_test(NAME event_json COMMAND test_event_json)
+
+add_executable(test_detect_range tests/test_detect_range.c)     # D1
+target_link_libraries(test_detect_range PRIVATE gardener_core m)
+add_test(NAME detect_range COMMAND test_detect_range)
+
+add_executable(test_detect_zscore tests/test_detect_zscore.c)   # D1
+target_link_libraries(test_detect_zscore PRIVATE gardener_core m)
+add_test(NAME detect_zscore COMMAND test_detect_zscore)
