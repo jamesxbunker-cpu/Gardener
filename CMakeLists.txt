@@ -21,7 +21,8 @@ add_library(gardener_core STATIC
     src/log_writer.c
     src/log_reader.c
     src/replay.c
-    src/baseline.c                      # C1
+    src/baseline.c
+    src/event.c                      # D0
 )
 target_include_directories(gardener_core PUBLIC include)
 
@@ -110,3 +111,7 @@ add_test(NAME baseline_persist COMMAND test_baseline_persist)
 add_executable(test_main_baseline tests/test_main_baseline.c)     # C5
 target_link_libraries(test_main_baseline PRIVATE gardener_core m)
 add_test(NAME main_baseline COMMAND test_main_baseline)
+
+add_executable(test_event_format tests/test_event_format.c)     # D0
+target_link_libraries(test_event_format PRIVATE gardener_core)
+add_test(NAME event_format COMMAND test_event_format)
