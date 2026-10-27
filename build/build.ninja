@@ -1268,6 +1268,44 @@ build test_detect_mismatch.exe: C_EXECUTABLE_LINKER__test_detect_mismatch_Debug 
   TARGET_PDB = test_detect_mismatch.exe.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\test_detect_mismatch.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_main_detect
+
+
+#############################################
+# Order-only phony target for test_main_detect
+
+build cmake_object_order_depends_target_test_main_detect: phony || cmake_object_order_depends_target_gardener_core
+
+build CMakeFiles/test_main_detect.dir/tests/test_main_detect.c.obj: C_COMPILER__test_main_detect_unscanned_Debug D$:/VS_Code/Gardener/tests/test_main_detect.c || cmake_object_order_depends_target_test_main_detect
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\test_main_detect.dir\tests\test_main_detect.c.obj.d
+  FLAGS = -g -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  INCLUDES = -ID:/VS_Code/Gardener/include
+  OBJECT_DIR = CMakeFiles\test_main_detect.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_main_detect.dir\tests
+  TARGET_SUPPORT_DIR = CMakeFiles\test_main_detect.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_main_detect
+
+
+#############################################
+# Link the executable test_main_detect.exe
+
+build test_main_detect.exe: C_EXECUTABLE_LINKER__test_main_detect_Debug CMakeFiles/test_main_detect.dir/tests/test_main_detect.c.obj | libgardener_core.a || libgardener_core.a
+  CONFIG = Debug
+  FLAGS = -g
+  LINK_LIBRARIES = libgardener_core.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\test_main_detect.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = test_main_detect.exe
+  TARGET_IMPLIB = libtest_main_detect.dll.a
+  TARGET_PDB = test_main_detect.exe.dbg
+  TARGET_SUPPORT_DIR = CMakeFiles\test_main_detect.dir
+
 
 #############################################
 # Utility command for test
@@ -1355,6 +1393,8 @@ build test_main_args: phony test_main_args.exe
 
 build test_main_baseline: phony test_main_baseline.exe
 
+build test_main_detect: phony test_main_detect.exe
+
 build test_packet_bin: phony test_packet_bin.exe
 
 build test_packet_json: phony test_packet_json.exe
@@ -1375,7 +1415,7 @@ build test_ring: phony test_ring.exe
 #############################################
 # Folder: D:/VS_Code/Gardener/build
 
-build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe gardener-stats.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe test_baseline_regimes.exe test_baseline_decay.exe test_baseline_persist.exe test_main_baseline.exe test_event_format.exe test_event_json.exe test_detect_range.exe test_detect_zscore.exe test_detect_flatline.exe test_detect_roc.exe test_detect_correlation.exe test_detect_mismatch.exe
+build all: phony libgardener_core.a gardener.exe gardener-dump.exe gardener-log.exe gardener-stats.exe test_platform.exe test_ring.exe test_registry.exe test_ingest.exe test_packet_json.exe test_packet_bin.exe test_log_format.exe test_log_writer.exe test_log_reader.exe test_replay.exe test_main_args.exe test_baseline_format.exe test_baseline.exe test_baseline_regimes.exe test_baseline_decay.exe test_baseline_persist.exe test_main_baseline.exe test_event_format.exe test_event_json.exe test_detect_range.exe test_detect_zscore.exe test_detect_flatline.exe test_detect_roc.exe test_detect_correlation.exe test_detect_mismatch.exe test_main_detect.exe
 
 # =============================================================================
 # Built-in targets

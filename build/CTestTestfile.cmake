@@ -54,3 +54,5 @@ add_test(detect_correlation "D:/VS_Code/Gardener/build/test_detect_correlation.e
 set_tests_properties(detect_correlation PROPERTIES  _BACKTRACE_TRIPLES "D:/VS_Code/Gardener/CMakeLists.txt;142;add_test;D:/VS_Code/Gardener/CMakeLists.txt;0;")
 add_test(detect_mismatch "D:/VS_Code/Gardener/build/test_detect_mismatch.exe")
 set_tests_properties(detect_mismatch PROPERTIES  _BACKTRACE_TRIPLES "D:/VS_Code/Gardener/CMakeLists.txt;146;add_test;D:/VS_Code/Gardener/CMakeLists.txt;0;")
+add_test(main_detect "D:/VS_Code/Gardener/build/test_main_detect.exe")
+set_tests_properties(main_detect PROPERTIES  _BACKTRACE_TRIPLES "D:/VS_Code/Gardener/CMakeLists.txt;150;add_test;D:/VS_Code/Gardener/CMakeLists.txt;0;")

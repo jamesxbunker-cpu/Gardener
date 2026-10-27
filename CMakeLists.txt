@@ -144,3 +144,7 @@ add_test(NAME detect_correlation COMMAND test_detect_correlation)
 add_executable(test_detect_mismatch tests/test_detect_mismatch.c)   # D4
 target_link_libraries(test_detect_mismatch PRIVATE gardener_core m)
 add_test(NAME detect_mismatch COMMAND test_detect_mismatch)
+
+add_executable(test_main_detect tests/test_main_detect.c)   # D5
+target_link_libraries(test_main_detect PRIVATE gardener_core)
+add_test(NAME main_detect COMMAND test_main_detect)
