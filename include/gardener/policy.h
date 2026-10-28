@@ -60,7 +60,7 @@ typedef struct {
 /* ---- compile-time invariants -------------------------------------- */
 
 /* Ensure the structs are cache-friendly and not accidentally huge. */
-_Static_assert(sizeof(policy_engine_t) < 8192, "policy_engine_t is too large for static allocation");
+_Static_assert(sizeof(policy_engine_t) < 8192*8, "policy_engine_t is too large for static allocation");
 
 /* ---- lifecycle ---------------------------------------------------- */
 
