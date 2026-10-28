@@ -24,6 +24,7 @@ add_library(gardener_core STATIC
     src/baseline.c
     src/event.c
     src/detect.c                     # D1
+    src/policy.c    
 )
 target_include_directories(gardener_core PUBLIC include)
 
@@ -148,3 +149,7 @@ add_test(NAME detect_mismatch COMMAND test_detect_mismatch)
 add_executable(test_main_detect tests/test_main_detect.c)   # D5
 target_link_libraries(test_main_detect PRIVATE gardener_core)
 add_test(NAME main_detect COMMAND test_main_detect)
+
+add_executable(test_policy_format tests/test_policy_format.c)
+target_link_libraries(test_policy_format PRIVATE gardener_core)
+add_test(NAME policy_format COMMAND test_policy_format)
