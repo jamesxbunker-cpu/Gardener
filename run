@@ -1,0 +1,4 @@
+cmake --build build
+cd build
+.\test_main_policy.exe
+ctest --output-on-failure

@@ -177,7 +177,7 @@ int policy_evaluate(policy_engine_t *pe,
     return fired;
 }
 
-int policy_execute(const policy_rule_t *rule, const event_t *e) {
+int policy_execute(const policy_rule_t *rule, const event_t *e, bool dry_run) {
     if (!rule || !e) return -1;
 
     int failures = 0;
@@ -185,9 +185,19 @@ int policy_execute(const policy_rule_t *rule, const event_t *e) {
     for (uint8_t i = 0; i < rule->action_count; i++) {
         const policy_action_t *act = &rule->actions[i];
 
+        if (dry_run) {
+            const char *type_str = "UNKNOWN";
+            if (act->type == ACTION_NOTIFY) type_str = "NOTIFY";
+            if (act->type == ACTION_LOG) type_str = "LOG";
+            if (act->type == ACTION_WEBHOOK) type_str = "WEBHOOK";
+            
+            fprintf(stderr, "[DRY-RUN] Rule '%s' would execute %s: %s\n",
+                    rule->name, type_str, act->target);
+            continue; // Skip actual execution
+        }
+
         switch (act->type) {
             case ACTION_NOTIFY:
-                /* Print to stderr with a clear prefix */
                 fprintf(stderr, "[POLICY] %s: %s\n", 
                         rule->name, 
                         act->target[0] ? act->target : "Event triggered");
@@ -202,7 +212,6 @@ int policy_execute(const policy_rule_t *rule, const event_t *e) {
                 {
                     FILE *f = fopen(act->target, "a");
                     if (f) {
-                        /* Simple human-readable log line */
                         fprintf(f, "t=%llu det=%s ch=%u sev=%s state=%s\n",
                                 (unsigned long long)event_get_timestamp(e),
                                 detector_name((detector_t)e->detector),
@@ -223,11 +232,6 @@ int policy_execute(const policy_rule_t *rule, const event_t *e) {
                     failures++;
                     break;
                 }
-                /* 
-                 * SECURITY: This is a naive execution. In Phase F (Dashboard), 
-                 * we will likely replace this with libcurl or socket streaming. 
-                 * For now, it allows things like `curl http://...`.
-                 */
                 if (system(act->target) != 0) {
                     plat_log(LOG_WARN, "policy: webhook command failed (exit != 0): %s", act->target);
                     failures++;

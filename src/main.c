@@ -7,6 +7,7 @@
 #include "gardener/baseline.h"
 #include "gardener/detect.h"
 #include "gardener/event.h"
+#include "gardener/policy.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +38,9 @@
 #define LINE_MAX 8192
 
 #define BASELINE_DECAY_INTERVAL_MS  30000u
+
+const char *policy_path = NULL;
+bool policy_dry_run = false;
 
 static volatile sig_atomic_t g_stop = 0;
 
@@ -333,7 +337,10 @@ static void events_close(events_sink_t *sink) {
 /* ---- detector runtime ---- */
 
 typedef struct {
-    detect_t *det;               /* NULL if --detect not given */
+    detect_t *det;
+    policy_engine_t policy;
+    bool policy_enabled;
+    bool policy_dry_run;
     event_counts_t counts;
 } detect_runtime_t;
 
@@ -347,11 +354,21 @@ static void maybe_run_detectors(detect_runtime_t *dr,
     if (!dr->det) return;
 
     event_t events[DETECT_EVENT_BUF];
-    int n = detect_update(dr->det, p, ing, baseline, reg,
-                          events, DETECT_EVENT_BUF);
+    int n = detect_update(dr->det, p, ing, baseline, reg, events, DETECT_EVENT_BUF);
     if (n <= 0) return;
+    
     for (int i = 0; i < n; i++) {
         events_write(sink, &events[i], &dr->counts);
+
+        /* Evaluate policies if enabled */
+        if (dr->policy_enabled) {
+            const policy_rule_t *fired[POLICY_MAX_RULES];
+            int num_fired = policy_evaluate(&dr->policy, &events[i], event_get_timestamp(&events[i]), fired, POLICY_MAX_RULES);
+            
+            for (int j = 0; j < num_fired; j++) {
+                policy_execute(fired[j], &events[i], dr->policy_dry_run);
+            }
+        }
     }
 }
 
@@ -587,8 +604,7 @@ int main(int argc, char **argv) {
 
     for (int i = 1; i < argc; i++) {
         const char *a = argv[i];
-        if      (!strcmp(a, "--version")) { puts("gardener 0.1.0 (phase D5)"); return 0; }
-        else if (!strcmp(a, "--verbose")) { verbose = 1; }
+        if      (!strcmp(a, "--version")) { puts("gardener 0.1.0 (phase E3)"); return 0; }        else if (!strcmp(a, "--verbose")) { verbose = 1; }
         else if (!strcmp(a, "--quiet"))   { quiet = 1; }
         else if (!strcmp(a, "--channels") && i + 1 < argc) {
             channels = argv[++i];
@@ -698,6 +714,12 @@ int main(int argc, char **argv) {
         else if (!strcmp(a, "--replay-progress") && i + 1 < argc) {
             replay_opts.progress_every = strtoull(argv[++i], NULL, 10);
         }
+        else if (!strcmp(a, "--policy") && i + 1 < argc) {
+            policy_path = argv[++i];
+        }
+        else if (!strcmp(a, "--policy-dry-run")) {
+            policy_dry_run = true;
+        }
         else if (!strcmp(a, "--help") || !strcmp(a, "-h")) {
             print_usage(argv[0]); return 0;
         }
@@ -797,6 +819,23 @@ int main(int argc, char **argv) {
                  (double)dcfg.roc_absolute_max,
                  (double)dcfg.correlation_threshold);
     }
+
+    /* --- ADD THIS BLOCK --- */
+    /* Policy engine, optional. */
+    if (detect_enabled && policy_path) {
+        if (policy_load_toml(&dr.policy, policy_path) != 0) {
+            plat_log(LOG_ERROR, "failed to load policy %s", policy_path);
+            if (lw) log_writer_close(lw);
+            return 1;
+        }
+        dr.policy_enabled = true;
+        dr.policy_dry_run = policy_dry_run;
+
+        plat_log(LOG_INFO, "policy: loaded %d rules from %s%s",
+                 dr.policy.rule_count, policy_path,
+                 dr.policy_dry_run ? " (DRY-RUN MODE)" : "");
+    }
+    /* ---------------------- */
 
     /* Events sink, optional. */
     static events_sink_t sink;

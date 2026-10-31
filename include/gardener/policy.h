@@ -95,11 +95,10 @@ int policy_evaluate(policy_engine_t *pe,
 
 /* Execute the actions for a rule that has fired.
  *
- * For ACTION_NOTIFY, prints a message to stderr.
- * For ACTION_LOG, appends a line to the target file.
- * For ACTION_WEBHOOK, runs the target string as a shell command.
+ * If `dry_run` is true, the function logs what it *would* do to stderr
+ * but does not actually execute webhooks, write files, or print notifications.
  *
  * Returns 0 on success, or -1 if any action fails to execute.
  */
-int policy_execute(const policy_rule_t *rule, const event_t *e);
+int policy_execute(const policy_rule_t *rule, const event_t *e, bool dry_run);
 #endif /* GARDENER_POLICY_H */

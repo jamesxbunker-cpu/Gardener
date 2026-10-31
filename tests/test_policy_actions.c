@@ -54,8 +54,8 @@ static void test_action_log(void) {
     e.state = EVENT_STATE_STARTED;
     event_set_timestamp(&e, 123456789);
 
-    // Execute
-    CHECK_EQ(policy_execute(&rule, &e), 0);
+    // Execute (with dry_run = false)
+    CHECK_EQ(policy_execute(&rule, &e, false), 0);
 
     // Verify file contents
     CHECK(file_contains(log_path, "t=123456789"));
@@ -83,7 +83,7 @@ static void test_action_webhook_success(void) {
     event_t e;
     memset(&e, 0, sizeof(e));
 
-    CHECK_EQ(policy_execute(&rule, &e), 0);
+    CHECK_EQ(policy_execute(&rule, &e, false), 0);
 }
 
 static void test_action_webhook_failure(void) {
@@ -104,7 +104,7 @@ static void test_action_webhook_failure(void) {
     memset(&e, 0, sizeof(e));
 
     /* Should return -1 because the action failed */
-    CHECK_EQ(policy_execute(&rule, &e), -1);
+    CHECK_EQ(policy_execute(&rule, &e, false), -1);
 }
 
 static void test_action_missing_target(void) {
@@ -117,15 +117,37 @@ static void test_action_missing_target(void) {
     event_t e;
     memset(&e, 0, sizeof(e));
 
-    CHECK_EQ(policy_execute(&rule, &e), -1);
+    CHECK_EQ(policy_execute(&rule, &e, false), -1);
+}
+
+static void test_action_dry_run(void) {
+    policy_rule_t rule;
+    memset(&rule, 0, sizeof(rule));
+    snprintf(rule.name, sizeof(rule.name), "test_dry_run");
+    rule.action_count = 1;
+    rule.actions[0].type = ACTION_LOG;
+    snprintf(rule.actions[0].target, sizeof(rule.actions[0].target), "should_not_exist.log");
+
+    event_t e;
+    memset(&e, 0, sizeof(e));
+
+    /* Execute in dry-run mode */
+    CHECK_EQ(policy_execute(&rule, &e, true), 0);
+
+    /* Verify the file was NOT created */
+    FILE *f = fopen("should_not_exist.log", "r");
+    CHECK(f == NULL); // NULL means it doesn't exist
+    if (f) fclose(f);
 }
 
 int main(void) {
     plat_log_set_level(LOG_ERROR); // Suppress expected warnings
+    
     test_action_log();
     test_action_webhook_success();
     test_action_webhook_failure();
     test_action_missing_target();
+    test_action_dry_run();
 
     if (g_failures) {
         fprintf(stderr, "\n%d check(s) failed\n", g_failures);
