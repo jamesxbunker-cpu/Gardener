@@ -74,4 +74,22 @@ int policy_load_toml(policy_engine_t *pe, const char *path);
  * (Implementation deferred to E1). */
 // int policy_evaluate(policy_engine_t *pe, const event_t *e, ...);
 
+/* Evaluate an event against the loaded rules.
+ *
+ * If an event matches a rule and the rule's cooldown has expired,
+ * it is considered "fired". The function updates the rule's
+ * last_fired_ns to enforce the cooldown.
+ *
+ * Returns the number of rules that fired, and fills the `fired_rules`
+ * array (up to `max_fired`) with pointers to the matched rules. The
+ * caller uses these pointers to execute the actions.
+ *
+ * `now_ns` should be the event's timestamp (or plat_wall_ns() if you
+ * want cooldowns based on real time).
+ */
+int policy_evaluate(policy_engine_t *pe,
+                    const event_t *e,
+                    uint64_t now_ns,
+                    const policy_rule_t **fired_rules,
+                    size_t max_fired);
 #endif /* GARDENER_POLICY_H */

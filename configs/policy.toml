@@ -1,0 +1,26 @@
+# Example Gardener policy configuration.
+
+[[rule]]
+name = "critical_coolant"
+detector = "zscore"
+severity = "critical"
+state = "started"
+cooldown = "30s"
+
+[[rule.action]]
+type = "notify"
+target = "Coolant temperature is critically out of bounds!"
+
+[[rule.action]]
+type = "log"
+target = "critical_events.log"
+
+[[rule]]
+name = "flatline_warning"
+detector = "flatline"
+state = "started"
+cooldown = "60s"
+
+[[rule.action]]
+type = "notify"
+target = "A sensor has flatlined."
