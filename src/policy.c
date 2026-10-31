@@ -176,3 +176,70 @@ int policy_evaluate(policy_engine_t *pe,
 
     return fired;
 }
+
+int policy_execute(const policy_rule_t *rule, const event_t *e) {
+    if (!rule || !e) return -1;
+
+    int failures = 0;
+
+    for (uint8_t i = 0; i < rule->action_count; i++) {
+        const policy_action_t *act = &rule->actions[i];
+
+        switch (act->type) {
+            case ACTION_NOTIFY:
+                /* Print to stderr with a clear prefix */
+                fprintf(stderr, "[POLICY] %s: %s\n", 
+                        rule->name, 
+                        act->target[0] ? act->target : "Event triggered");
+                break;
+
+            case ACTION_LOG:
+                if (act->target[0] == 0) {
+                    plat_log(LOG_WARN, "policy: log action missing target path");
+                    failures++;
+                    break;
+                }
+                {
+                    FILE *f = fopen(act->target, "a");
+                    if (f) {
+                        /* Simple human-readable log line */
+                        fprintf(f, "t=%llu det=%s ch=%u sev=%s state=%s\n",
+                                (unsigned long long)event_get_timestamp(e),
+                                detector_name((detector_t)e->detector),
+                                (unsigned)e->channel_id,
+                                severity_name((severity_t)e->severity),
+                                event_state_name((event_state_t)e->state));
+                        fclose(f);
+                    } else {
+                        plat_log(LOG_WARN, "policy: cannot open log file %s", act->target);
+                        failures++;
+                    }
+                }
+                break;
+
+            case ACTION_WEBHOOK:
+                if (act->target[0] == 0) {
+                    plat_log(LOG_WARN, "policy: webhook action missing target command");
+                    failures++;
+                    break;
+                }
+                /* 
+                 * SECURITY: This is a naive execution. In Phase F (Dashboard), 
+                 * we will likely replace this with libcurl or socket streaming. 
+                 * For now, it allows things like `curl http://...`.
+                 */
+                if (system(act->target) != 0) {
+                    plat_log(LOG_WARN, "policy: webhook command failed (exit != 0): %s", act->target);
+                    failures++;
+                }
+                break;
+
+            default:
+                plat_log(LOG_WARN, "policy: unknown action type %d", act->type);
+                failures++;
+                break;
+        }
+    }
+
+    return failures == 0 ? 0 : -1;
+}

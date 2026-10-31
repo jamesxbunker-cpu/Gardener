@@ -157,3 +157,7 @@ add_test(NAME policy_format COMMAND test_policy_format)
 add_executable(test_policy_match tests/test_policy_match.c)
 target_link_libraries(test_policy_match PRIVATE gardener_core)
 add_test(NAME policy_match COMMAND test_policy_match)
+
+add_executable(test_policy_actions tests/test_policy_actions.c)
+target_link_libraries(test_policy_actions PRIVATE gardener_core)
+add_test(NAME policy_actions COMMAND test_policy_actions)

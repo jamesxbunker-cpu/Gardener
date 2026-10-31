@@ -92,4 +92,14 @@ int policy_evaluate(policy_engine_t *pe,
                     uint64_t now_ns,
                     const policy_rule_t **fired_rules,
                     size_t max_fired);
+
+/* Execute the actions for a rule that has fired.
+ *
+ * For ACTION_NOTIFY, prints a message to stderr.
+ * For ACTION_LOG, appends a line to the target file.
+ * For ACTION_WEBHOOK, runs the target string as a shell command.
+ *
+ * Returns 0 on success, or -1 if any action fails to execute.
+ */
+int policy_execute(const policy_rule_t *rule, const event_t *e);
 #endif /* GARDENER_POLICY_H */
