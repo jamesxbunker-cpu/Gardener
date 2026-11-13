@@ -172,7 +172,6 @@ add_executable(test_dashboard tests/test_dashboard.c)
 target_link_libraries(test_dashboard PRIVATE gardener_core)
 add_test(NAME dashboard COMMAND test_dashboard)
 
-# If you are on Windows, you MUST link ws2_32 to the core library
 if(WIN32)
-    target_link_libraries(gardener_core PRIVATE ws2_32)
+    target_link_libraries(gardener_core PUBLIC ws2_32)
 endif()

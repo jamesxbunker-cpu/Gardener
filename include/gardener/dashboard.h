@@ -5,6 +5,7 @@
 #include "gardener/registry.h"
 #include "gardener/packet.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 /* ---------------------------------------------------------------------
  * Dashboard Link (Phase F)
@@ -16,9 +17,12 @@
 
 #define DASHBOARD_MAX_CLIENTS 4
 
+
+#include <stdint.h>
+
 typedef struct {
-    int listen_fd;
-    int client_fds[DASHBOARD_MAX_CLIENTS];
+    uintptr_t listen_fd;
+    uintptr_t client_fds[DASHBOARD_MAX_CLIENTS];
     uint16_t port;
 } dashboard_server_t;
 
