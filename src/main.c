@@ -8,6 +8,7 @@
 #include "gardener/detect.h"
 #include "gardener/event.h"
 #include "gardener/policy.h"
+#include "gardener/dashboard.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,19 +29,15 @@
  * Optional anomaly detection:
  *   --detect           run detectors on every packet
  *   --events <path>    write events to this JSONL file
+ *   --policy <path>    execute actions for matched events
  *
- * Exit codes:
- *   0   ran to completion
- *   1   runtime error
- *   2   usage error
+ * Optional dashboard:
+ *   --dashboard <port> start TCP server for live Python UI
  * ------------------------------------------------------------------- */
 
 #define LINE_MAX 8192
 
 #define BASELINE_DECAY_INTERVAL_MS  30000u
-
-const char *policy_path = NULL;
-bool policy_dry_run = false;
 
 static volatile sig_atomic_t g_stop = 0;
 
@@ -83,6 +80,13 @@ static void print_usage(const char *prog) {
         "  --detect-corr <r>       correlation threshold (default: 0.5)\n"
         "  --detect-mismatch-thresh <d> mismatch threshold (default: 5.0)\n"
         "\n"
+        "Policy:\n"
+        "  --policy <path>         load policy rules from a TOML file\n"
+        "  --policy-dry-run        evaluate rules but do not execute actions\n"
+        "\n"
+        "Dashboard:\n"
+        "  --dashboard <port>      start a TCP JSONL server (e.g. 5555)\n"
+        "\n"
         "Replay:\n"
         "  --replay <path>         replay a binary log instead of stdin\n"
         "  --replay-speed <mode>   max (default), real, or a positive factor\n"
@@ -118,7 +122,6 @@ static int parse_size(const char *s, uint64_t *out) {
 
 /* ---- pair parsing ---- */
 
-/* Parse "a,b" into two uint16s. Returns 0 on success. */
 static int parse_pair(const char *s, uint16_t *a, uint16_t *b) {
     if (!s) return -1;
     char *comma = strchr(s, ',');
@@ -181,9 +184,6 @@ static void print_baseline_stats(const baseline_t *b, const char *path) {
         (unsigned)baseline_regime_count(b));
 }
 
-/* Print per-detector event counts from the emitted counter. Since we
- * don't track per-detector counts in detect_t, we track them in main
- * and pass them in. */
 typedef struct {
     uint64_t range;
     uint64_t zscore;
@@ -265,7 +265,7 @@ static void tick_baseline(baseline_runtime_t *br, uint64_t now_ns) {
 /* ---- events sink ---- */
 
 typedef struct {
-    plat_file_t *fp;      /* NULL if --events not given or open failed */
+    plat_file_t *fp;
     char         path[256];
     uint64_t     written;
     uint64_t     failed;
@@ -276,9 +276,6 @@ static void events_write(events_sink_t *sink,
                          event_counts_t *counts) {
     count_event(counts, (detector_t)e->detector);
 
-    /* Always echo a compact one-liner to stderr so the user sees
-     * events even without --events. Only echo STARTED (CLEARED is
-     * noise). */
     if (e->state == EVENT_STATE_STARTED) {
         fprintf(stderr,
             "[event] t=%llu ch=%u det=%s sev=%s obs=%g thresh=%g\n",
@@ -292,7 +289,6 @@ static void events_write(events_sink_t *sink,
 
     if (!sink->fp) return;
 
-    /* Build a human-readable message for the JSONL line. */
     char msg[128];
     if (e->state == EVENT_STATE_STARTED) {
         snprintf(msg, sizeof(msg),
@@ -342,9 +338,9 @@ typedef struct {
     bool policy_enabled;
     bool policy_dry_run;
     event_counts_t counts;
+    dashboard_server_t *dash;
 } detect_runtime_t;
 
-/* Run detectors on one packet, write events to sink, update counts. */
 static void maybe_run_detectors(detect_runtime_t *dr,
                                 const packet_t *p,
                                 const ingest_t *ing,
@@ -354,16 +350,24 @@ static void maybe_run_detectors(detect_runtime_t *dr,
     if (!dr->det) return;
 
     event_t events[DETECT_EVENT_BUF];
-    int n = detect_update(dr->det, p, ing, baseline, reg, events, DETECT_EVENT_BUF);
+    int n = detect_update(dr->det, p, ing, baseline, reg,
+                          events, DETECT_EVENT_BUF);
     if (n <= 0) return;
     
     for (int i = 0; i < n; i++) {
         events_write(sink, &events[i], &dr->counts);
 
+        /* Send to dashboard if connected */
+        if (dr->dash) {
+            dashboard_send_event(dr->dash, &events[i]);
+        }
+
         /* Evaluate policies if enabled */
         if (dr->policy_enabled) {
             const policy_rule_t *fired[POLICY_MAX_RULES];
-            int num_fired = policy_evaluate(&dr->policy, &events[i], event_get_timestamp(&events[i]), fired, POLICY_MAX_RULES);
+            int num_fired = policy_evaluate(&dr->policy, &events[i],
+                                            event_get_timestamp(&events[i]),
+                                            fired, POLICY_MAX_RULES);
             
             for (int j = 0; j < num_fired; j++) {
                 policy_execute(fired[j], &events[i], dr->policy_dry_run);
@@ -386,18 +390,13 @@ static int handle_packet(ingest_t *ing, log_writer_t *lw,
     if (lw && !*log_failed_once) {
         int r = log_writer_append(lw, p);
         if (r < 0) {
-            plat_log(LOG_WARN,
-                     "log write failed; continuing without logging");
+            plat_log(LOG_WARN, "log write failed; continuing without logging");
             *log_failed_once = true;
         }
     }
 
     maybe_update_baseline(br, p);
-
-    maybe_run_detectors(dr, p, ing,
-                        br->model,
-                        &ing->registry,
-                        sink);
+    maybe_run_detectors(dr, p, ing, br->model, &ing->registry, sink);
     return 0;
 }
 
@@ -409,7 +408,7 @@ static int run_stdin_mode(ingest_t *ing, log_writer_t *lw,
                           events_sink_t *sink,
                           unsigned long stats_every) {
     plat_log(LOG_INFO,
-             "gardener 0.1.0 (D5): reading JSONL packets from stdin%s%s%s",
+             "gardener 0.1.0 (F0): reading JSONL packets from stdin%s%s%s",
              lw ? " (log)" : "",
              br->model ? " (baseline)" : "",
              dr->det ? " (detect)" : "");
@@ -443,14 +442,14 @@ static int run_stdin_mode(ingest_t *ing, log_writer_t *lw,
 
         tick_baseline(br, p.timestamp_ns);
 
+        if (dr->dash) dashboard_poll(dr->dash);
+
         if (stats_every && (ing->packets_seen % stats_every) == 0) {
             print_ingest_stats(ing);
         }
     }
 
-    plat_log(LOG_INFO,
-             "stdin closed or interrupted after %llu lines (%llu bad)",
-             lines, bad);
+    plat_log(LOG_INFO, "stdin closed after %llu lines (%llu bad)", lines, bad);
     return 0;
 }
 
@@ -463,15 +462,12 @@ static int run_replay_mode(ingest_t *ing, log_writer_t *lw,
                            const replay_opts_t *opts,
                            unsigned long stats_every) {
     plat_log(LOG_INFO,
-             "gardener 0.1.0 (D5): replaying %s%s%s%s",
+             "gardener 0.1.0 (F0): replaying %s%s%s%s",
              opts->log_path,
              lw ? " (log)" : "",
              br->model ? " (baseline)" : "",
              dr->det ? " (detect)" : "");
 
-    /* If nothing is wired to ingest except ingest itself, use the
-     * plain replay_run. Otherwise we need our own loop so we can
-     * interpose log/baseline/detect on each packet. */
     if (!lw && !br->model && !dr->det) {
         replay_stats_t rs;
         int rc = replay_run(opts, ing, &rs);
@@ -545,6 +541,8 @@ static int run_replay_mode(ingest_t *ing, log_writer_t *lw,
 
         tick_baseline(br, p.timestamp_ns);
 
+        if (dr->dash) dashboard_poll(dr->dash);
+
         if (stats_every && (packets_fed % stats_every) == 0) {
             print_ingest_stats(ing);
         }
@@ -572,6 +570,7 @@ int main(int argc, char **argv) {
     const char *log_path = NULL;
     const char *baseline_path = NULL;
     const char *events_path = NULL;
+    const char *policy_path = NULL;
     uint64_t    log_max = LOG_DEFAULT_MAX;
     bool        log_fresh = false;
     bool        baseline_fresh = false;
@@ -580,9 +579,10 @@ int main(int argc, char **argv) {
     int verbose = 0;
     int quiet = 0;
     int detect_enabled = 0;
+    bool policy_dry_run = false;
+    int dashboard_port = 0;
     unsigned long stats_every = 0;
 
-    /* Detector config to build from flags. */
     detect_config_t dcfg;
     memset(&dcfg, 0, sizeof(dcfg));
     dcfg.enable_range = true;
@@ -604,7 +604,8 @@ int main(int argc, char **argv) {
 
     for (int i = 1; i < argc; i++) {
         const char *a = argv[i];
-        if      (!strcmp(a, "--version")) { puts("gardener 0.1.0 (phase E3)"); return 0; }        else if (!strcmp(a, "--verbose")) { verbose = 1; }
+        if      (!strcmp(a, "--version")) { puts("gardener 0.1.0 (phase F0)"); return 0; }
+        else if (!strcmp(a, "--verbose")) { verbose = 1; }
         else if (!strcmp(a, "--quiet"))   { quiet = 1; }
         else if (!strcmp(a, "--channels") && i + 1 < argc) {
             channels = argv[++i];
@@ -643,8 +644,7 @@ int main(int argc, char **argv) {
                 return 2;
             }
             if (dcfg.correlation_pair_count >= DETECT_MAX_PAIRS) {
-                fprintf(stderr, "too many --detect-pair (max %d)\n",
-                        DETECT_MAX_PAIRS);
+                fprintf(stderr, "too many --detect-pair (max %d)\n", DETECT_MAX_PAIRS);
                 return 2;
             }
             dcfg.correlation_pairs[dcfg.correlation_pair_count].ch_a = ca;
@@ -658,14 +658,12 @@ int main(int argc, char **argv) {
                 return 2;
             }
             if (dcfg.mismatch_pair_count >= DETECT_MAX_MISMATCH_PAIRS) {
-                fprintf(stderr, "too many --detect-mismatch (max %d)\n",
-                        DETECT_MAX_MISMATCH_PAIRS);
+                fprintf(stderr, "too many --detect-mismatch (max %d)\n", DETECT_MAX_MISMATCH_PAIRS);
                 return 2;
             }
             dcfg.mismatch_pairs[dcfg.mismatch_pair_count].ctrl_out = cc;
             dcfg.mismatch_pairs[dcfg.mismatch_pair_count].actuator = aa;
-            dcfg.mismatch_pairs[dcfg.mismatch_pair_count].threshold =
-                DETECT_DEFAULT_MISMATCH_THRESHOLD;
+            dcfg.mismatch_pairs[dcfg.mismatch_pair_count].threshold = DETECT_DEFAULT_MISMATCH_THRESHOLD;
             dcfg.mismatch_pair_count++;
         }
         else if (!strcmp(a, "--detect-zscore") && i + 1 < argc) {
@@ -678,11 +676,19 @@ int main(int argc, char **argv) {
             dcfg.correlation_threshold = (float)atof(argv[++i]);
         }
         else if (!strcmp(a, "--detect-mismatch-thresh") && i + 1 < argc) {
-            /* Applies to all mismatch pairs already added. */
             float t = (float)atof(argv[++i]);
             for (uint8_t k = 0; k < dcfg.mismatch_pair_count; k++) {
                 dcfg.mismatch_pairs[k].threshold = t;
             }
+        }
+        else if (!strcmp(a, "--policy") && i + 1 < argc) {
+            policy_path = argv[++i];
+        }
+        else if (!strcmp(a, "--policy-dry-run")) {
+            policy_dry_run = true;
+        }
+        else if (!strcmp(a, "--dashboard") && i + 1 < argc) {
+            dashboard_port = (int)strtol(argv[++i], NULL, 10);
         }
         else if (!strcmp(a, "--replay") && i + 1 < argc) {
             replay_path = argv[++i];
@@ -714,12 +720,6 @@ int main(int argc, char **argv) {
         else if (!strcmp(a, "--replay-progress") && i + 1 < argc) {
             replay_opts.progress_every = strtoull(argv[++i], NULL, 10);
         }
-        else if (!strcmp(a, "--policy") && i + 1 < argc) {
-            policy_path = argv[++i];
-        }
-        else if (!strcmp(a, "--policy-dry-run")) {
-            policy_dry_run = true;
-        }
         else if (!strcmp(a, "--help") || !strcmp(a, "-h")) {
             print_usage(argv[0]); return 0;
         }
@@ -748,9 +748,7 @@ int main(int argc, char **argv) {
     if (log_path) {
         lw = log_writer_open(log_path, log_max, &ing.registry, log_fresh);
         if (!lw) {
-            plat_log(LOG_WARN,
-                     "log writer failed to open %s; continuing without logging",
-                     log_path);
+            plat_log(LOG_WARN, "log writer failed to open %s; continuing without logging", log_path);
         }
     }
 
@@ -763,23 +761,18 @@ int main(int argc, char **argv) {
         uint64_t halflife_ns = baseline_halflife_s * 1000000000ull;
 
         if (!baseline_fresh) {
-            if (baseline_load(&baseline_model, baseline_path,
-                              &ing.registry) == 0) {
+            if (baseline_load(&baseline_model, baseline_path, &ing.registry) == 0) {
                 plat_log(LOG_INFO, "baseline: loaded %s", baseline_path);
             } else {
-                plat_log(LOG_INFO,
-                         "baseline: could not load %s; starting fresh",
-                         baseline_path);
-                if (baseline_init(&baseline_model, &ing.registry,
-                                  halflife_ns) != 0) {
+                plat_log(LOG_INFO, "baseline: could not load %s; starting fresh", baseline_path);
+                if (baseline_init(&baseline_model, &ing.registry, halflife_ns) != 0) {
                     plat_log(LOG_ERROR, "baseline_init failed");
                     if (lw) log_writer_close(lw);
                     return 1;
                 }
             }
         } else {
-            if (baseline_init(&baseline_model, &ing.registry,
-                              halflife_ns) != 0) {
+            if (baseline_init(&baseline_model, &ing.registry, halflife_ns) != 0) {
                 plat_log(LOG_ERROR, "baseline_init failed");
                 if (lw) log_writer_close(lw);
                 return 1;
@@ -792,8 +785,7 @@ int main(int argc, char **argv) {
         br.last_save_ns  = plat_wall_ns();
         br.save_interval_ns = baseline_save_every_s * 1000000000ull;
 
-        plat_log(LOG_INFO,
-                 "baseline: halflife=%llus channels=%u regimes=%u",
+        plat_log(LOG_INFO, "baseline: halflife=%llus channels=%u regimes=%u",
                  (unsigned long long)baseline_halflife_s,
                  (unsigned)baseline_channel_count(&baseline_model),
                  (unsigned)baseline_regime_count(&baseline_model));
@@ -811,8 +803,7 @@ int main(int argc, char **argv) {
         }
         dr.det = &detect_model;
 
-        plat_log(LOG_INFO,
-                 "detect: pairs=%u mismatch_pairs=%u z=%g roc=%g corr=%g",
+        plat_log(LOG_INFO, "detect: pairs=%u mismatch_pairs=%u z=%g roc=%g corr=%g",
                  (unsigned)dcfg.correlation_pair_count,
                  (unsigned)dcfg.mismatch_pair_count,
                  (double)dcfg.zscore_threshold,
@@ -820,7 +811,6 @@ int main(int argc, char **argv) {
                  (double)dcfg.correlation_threshold);
     }
 
-    /* --- ADD THIS BLOCK --- */
     /* Policy engine, optional. */
     if (detect_enabled && policy_path) {
         if (policy_load_toml(&dr.policy, policy_path) != 0) {
@@ -835,7 +825,15 @@ int main(int argc, char **argv) {
                  dr.policy.rule_count, policy_path,
                  dr.policy_dry_run ? " (DRY-RUN MODE)" : "");
     }
-    /* ---------------------- */
+
+    /* Dashboard server, optional. */
+    static dashboard_server_t dash;
+    if (dashboard_port > 0) {
+        if (dashboard_init(&dash, (uint16_t)dashboard_port) == 0) {
+            dr.dash = &dash;
+            dashboard_send_registry(&dash, &ing.registry);
+        }
+    }
 
     /* Events sink, optional. */
     static events_sink_t sink;
@@ -843,9 +841,7 @@ int main(int argc, char **argv) {
     if (events_path) {
         sink.fp = plat_file_open(events_path, PLAT_FILE_WRITE);
         if (!sink.fp) {
-            plat_log(LOG_WARN,
-                     "events: cannot open %s; events will not be written to file",
-                     events_path);
+            plat_log(LOG_WARN, "events: cannot open %s; events will not be written to file", events_path);
         } else {
             snprintf(sink.path, sizeof(sink.path), "%s", events_path);
             plat_log(LOG_INFO, "events: writing to %s", events_path);
@@ -854,8 +850,7 @@ int main(int argc, char **argv) {
 
     int rc;
     if (replay_path) {
-        rc = run_replay_mode(&ing, lw, &br, &dr, &sink, &replay_opts,
-                             stats_every);
+        rc = run_replay_mode(&ing, lw, &br, &dr, &sink, &replay_opts, stats_every);
     } else {
         rc = run_stdin_mode(&ing, lw, &br, &dr, &sink, stats_every);
     }
@@ -885,6 +880,9 @@ int main(int argc, char **argv) {
         events_close(&sink);
     }
 
+    if (dr.dash) {
+        dashboard_close(dr.dash);
+    }
     if (lw) log_writer_close(lw);
     return rc;
 }
