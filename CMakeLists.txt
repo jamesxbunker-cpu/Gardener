@@ -25,6 +25,7 @@ add_library(gardener_core STATIC
     src/event.c
     src/detect.c                     # D1
     src/policy.c    
+    src/dashboard.c
 )
 target_include_directories(gardener_core PUBLIC include)
 
@@ -165,3 +166,13 @@ add_test(NAME policy_actions COMMAND test_policy_actions)
 add_executable(test_main_policy tests/test_main_policy.c)
 target_link_libraries(test_main_policy PRIVATE gardener_core)
 add_test(NAME main_policy COMMAND test_main_policy)
+    
+
+add_executable(test_dashboard tests/test_dashboard.c)
+target_link_libraries(test_dashboard PRIVATE gardener_core)
+add_test(NAME dashboard COMMAND test_dashboard)
+
+# If you are on Windows, you MUST link ws2_32 to the core library
+if(WIN32)
+    target_link_libraries(gardener_core PRIVATE ws2_32)
+endif()
