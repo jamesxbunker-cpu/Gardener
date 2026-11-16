@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gardener Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #1e1e1e; color: #d4d4d4; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        .status { font-weight: bold; padding: 5px 10px; border-radius: 4px; }
+        .connected { background: #2e7d32; color: white; }
+        .disconnected { background: #c62828; color: white; }
+        .event { padding: 10px; margin-bottom: 8px; border-radius: 4px; background: #2d2d2d; border-left: 4px solid #555; }
+        .event.critical { border-left-color: #f44336; background: #3e2723; }
+        .event.warn { border-left-color: #ff9800; }
+        .event.started { border-left-color: #2196f3; }
+        .event-meta { font-size: 0.85em; color: #888; margin-bottom: 4px; }
+        .event-desc { font-size: 1.1em; }
+        .channel { color: #4fc3f7; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌱 Gardener</h1>
+        <div id="connection-status">
+            <span class="status disconnected">Connecting...</span>
+        </div>
+    </div>
+
+    <div hx-get="/api/events" hx-trigger="every 1s" hx-target="#event-list" hx-swap="innerHTML" hx-on::after-request="updateStatus(event)">
+        <div id="event-list">
+            <p>Loading events...</p>
+        </div>
+    </div>
+
+    <!-- Hidden element to hold the raw JSON response for the status bar -->
+    <div id="status-data" style="display:none;"></div>
+
+    <script>
+        // We use this to update the connection status badge without re-rendering the whole page
+        function updateStatus(e) {
+            const data = JSON.parse(e.detail.xhr.responseText);
+            const statusDiv = document.getElementById('connection-status');
+            
+            if (data.connected) {
+                statusDiv.innerHTML = `<span class="status connected">Connected (${data.registry_count} channels)</span>`;
+            } else {
+                statusDiv.innerHTML = `<span class="status disconnected">Disconnected</span>`;
+            }
+
+            // Render events
+            const list = document.getElementById('event-list');
+            if (data.events.length === 0) {
+                list.innerHTML = '<p>Waiting for events...</p>';
+                return;
+            }
+
+            let html = '';
+            for (const ev of data.events) {
+                const time = new Date(ev.t / 1000000).toLocaleTimeString();
+                const cls = `event ${ev.severity} ${ev.state}`;
+                const ch = ev.ch_name ? ev.ch_name : `ch ${ev.ch}`;
+                const state = ev.state === 'cleared' ? '✅ Cleared' : '⚠️ Fired';
+                
+                html += `
+                <div class="${cls}">
+                    <div class="event-meta">
+                        ${time} • ${ev.detector.toUpperCase()} • ${state}
+                    </div>
+                    <div class="event-desc">
+                        <span class="channel">${ch}</span>: 
+                        Observed ${Number(ev.observed).toFixed(2)} 
+                        (threshold ${Number(ev.threshold).toFixed(2)})
+                    </div>
+                </div>
+                `;
+            }
+            list.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
