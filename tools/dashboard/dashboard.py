@@ -14,7 +14,7 @@ from fastapi.templating import Jinja2Templates
 
 # --- State ---
 GARDENER_HOST = '127.0.0.1'
-GARDENER_PORT = 5555
+GARDENER_PORT = 5556
 events = deque(maxlen=50) # Keep the last 50 events
 registry = {}
 connected = False

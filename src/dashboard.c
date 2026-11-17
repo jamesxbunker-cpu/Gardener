@@ -77,6 +77,7 @@ int dashboard_init(dashboard_server_t *dash, uint16_t port) {
     addr.sin_port = htons(port);
 
     if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+        plat_log(LOG_ERROR, "dashboard: bind failed on port %u (is it already in use?)", port);
         CLOSE_SOCKET(fd);
         return -1;
     }

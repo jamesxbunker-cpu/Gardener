@@ -832,6 +832,8 @@ int main(int argc, char **argv) {
         if (dashboard_init(&dash, (uint16_t)dashboard_port) == 0) {
             dr.dash = &dash;
             dashboard_send_registry(&dash, &ing.registry);
+        } else {
+            plat_log(LOG_ERROR, "dashboard: failed to start on port %d", dashboard_port);
         }
     }
 
