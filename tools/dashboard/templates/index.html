@@ -33,11 +33,7 @@
         </div>
     </div>
 
-    <!-- Hidden element to hold the raw JSON response for the status bar -->
-    <div id="status-data" style="display:none;"></div>
-
     <script>
-        // We use this to update the connection status badge without re-rendering the whole page
         function updateStatus(e) {
             const data = JSON.parse(e.detail.xhr.responseText);
             const statusDiv = document.getElementById('connection-status');
@@ -48,7 +44,6 @@
                 statusDiv.innerHTML = `<span class="status disconnected">Disconnected</span>`;
             }
 
-            // Render events
             const list = document.getElementById('event-list');
             if (data.events.length === 0) {
                 list.innerHTML = '<p>Waiting for events...</p>';

@@ -256,11 +256,16 @@ static int is_flatline(const ingest_t *ing, uint16_t ch_id) {
 static int check_flatline(detect_t *det,
                           const sample_t *s,
                           const ingest_t *ing,
+                          const registry_t *reg,      /* <-- ADD THIS */
                           const packet_t *p,
                           event_t *events, size_t cap, size_t *n) {
     if (!det->config.enable_flatline || !ing) return 0;
     if (s->flags & CH_FLAG_STALE) return 0;
     if (!(s->flags & CH_FLAG_VALID)) return 0;
+
+    /* Only check flatlines on actual sensors */
+    const channel_desc_t *desc = registry_get(reg, s->channel_id);
+    if (!desc || desc->role != ROLE_SENSOR) return 0;
 
     bool flat = is_flatline(ing, s->channel_id);
     bool was = det->state[s->channel_id].flatline_in_violation;
@@ -333,11 +338,16 @@ static float compute_roc(const ingest_t *ing, uint16_t ch_id) {
 static int check_roc(detect_t *det,
                      const sample_t *s,
                      const ingest_t *ing,
+                     const registry_t *reg,      /* <-- ADD THIS */
                      const packet_t *p,
                      event_t *events, size_t cap, size_t *n) {
     if (!det->config.enable_roc || !ing) return 0;
     if (s->flags & CH_FLAG_STALE) return 0;
     if (!(s->flags & CH_FLAG_VALID)) return 0;
+
+    /* Only check rate-of-change on actual sensors */
+    const channel_desc_t *desc = registry_get(reg, s->channel_id);
+    if (!desc || desc->role != ROLE_SENSOR) return 0;
 
     float rate = compute_roc(ing, s->channel_id);
     if (rate < 0.0f) return 0;
@@ -614,18 +624,18 @@ int detect_update(detect_t *det,
         if (r != 0xFFFF) regime = r;
     }
 
-    /* Per-sample detectors. */
     for (uint16_t i = 0; i < p->channel_count; i++) {
         const sample_t *s = &p->samples[i];
         if (s->channel_id >= DETECT_MAX_CHANNELS) continue;
 
         check_range(det, s, registry, p, events, cap, &n_events);
         check_zscore(det, s, baseline, p, events, cap, &n_events, regime);
-        check_flatline(det, s, ing, p, events, cap, &n_events);
-        check_roc(det, s, ing, p, events, cap, &n_events);
+        
+        /* Pass registry to these two: */
+        check_flatline(det, s, ing, registry, p, events, cap, &n_events);
+        check_roc(det, s, ing, registry, p, events, cap, &n_events);
     }
 
-    /* Per-pair detectors, once per packet. */
     check_correlation(det, p, ing, events, cap, &n_events);
     check_mismatch(det, p, events, cap, &n_events);
 

@@ -58,7 +58,7 @@ Gardener's job is to notice these things. It watches the controller's internals 
          |                            |            |                |
          |                            |            v                |
          |                            |  events.jsonl (disk)        |
-         |                            |  JSONL TCP (port 5555)      |
+         |                            |  JSONL TCP (port 5556)      |
          |                            +-----------------------------+
          |                                          |
          v                                          v
@@ -127,7 +127,7 @@ The `role` field is the key insight that makes Gardener different from a generic
 
 **`gardener-stats`** (`tools/gardener_stats.c`) — reads a baseline file and prints per-channel, per-regime statistics. `--ready-only` shows only slots that crossed the threshold.
 
-**`gensim`** (`tools/gensim/`) — a Python simulated source. Emits JSONL packets driven by a scenario file with fault injection. Plant models (`generic`, `hvac`), time acceleration, and scripted events (`freeze`, `spike`, `drift`, `link_gap`). 
+**`gensim`** (`tools/gensim/`) — a Python simulated source. Emits JSONL packets driven by a scenario file with fault injection. Plant models (`generic`, `hvac`), time acceleration, and scripted events (`freeze`, `spike`, `drift`, `link_gap`). Supports a `--continuous` flag for infinite streaming.
 
 **`dashboard`** (`tools/dashboard/`) — a Python FastAPI web application. Connects to the `--dashboard` TCP stream and renders live anomalies in a browser using Jinja2 and htmx.
 
@@ -192,25 +192,26 @@ py tools/gensim/gensim.py --scenario tools/gensim/scenarios/sensor_drift.yaml --
 ```
 *(Add `--policy-dry-run` to see what would happen without executing webhooks or file logs).*
 
-### 4. Live Dashboard
+### 4. Live Dashboard & Continuous Streaming
 
-**Terminal 1 (Python):**
+**Terminal 1 (Python Dashboard):**
 ```bash
 cd tools/dashboard
 py -m pip install -r requirements.txt
 py dashboard.py
 ```
+Open `http://localhost:8001` in your browser.
 
-**Terminal 2 (Gardener):**
-```bash
-py tools/gensim/gensim.py --scenario tools/gensim/scenarios/sensor_drift.yaml --duration 60 --speed 5 |
-    ./build/gardener --channels configs/channels.toml --baseline normal.bl --detect --dashboard 5555
+**Terminal 2 (Gardener & Continuous Simulator):**
+To simulate a device that stays connected indefinitely, use the `--continuous` flag. On Windows, you must use `cmd /c` and `py -u` (unbuffered) to prevent PowerShell from stalling the pipe:
+
+```powershell
+cmd /c "py -u tools\gensim\gensim.py --scenario tools\gensim\scenarios\sensor_drift.yaml --continuous | .\build\gardener --channels configs\channels.toml --baseline build\normal.bl --detect --dashboard 5556"
 ```
-Open `http://localhost:8001` in your browser to watch the anomalies stream in.
 
 ### Windows note
 
-PowerShell's `>` re-encodes stdout as UTF-16LE on PowerShell 5.x, which `gardener` cannot parse. Redirect through `cmd.exe`, use `Get-Content` for file piping, or use PowerShell 7 (`pwsh`). Piping (`|`) directly from `py` to `gardener` is not affected.
+PowerShell's `>` re-encodes stdout as UTF-16LE on PowerShell 5.x, which `gardener` cannot parse. Redirect through `cmd.exe`, use `Get-Content` for file piping, or use PowerShell 7 (`pwsh`). Piping (`|`) directly from `py` to `gardener` requires the `cmd /c "py -u ..."` wrapper to avoid buffering issues.
 
 ## Options Reference
 

@@ -442,7 +442,7 @@ static int run_stdin_mode(ingest_t *ing, log_writer_t *lw,
 
         tick_baseline(br, p.timestamp_ns);
 
-        if (dr->dash) dashboard_poll(dr->dash);
+        if (dr->dash) dashboard_poll(dr->dash, &ing->registry);
 
         if (stats_every && (ing->packets_seen % stats_every) == 0) {
             print_ingest_stats(ing);
@@ -541,8 +541,8 @@ static int run_replay_mode(ingest_t *ing, log_writer_t *lw,
 
         tick_baseline(br, p.timestamp_ns);
 
-        if (dr->dash) dashboard_poll(dr->dash);
-
+        if (dr->dash) dashboard_poll(dr->dash, &ing->registry);
+        
         if (stats_every && (packets_fed % stats_every) == 0) {
             print_ingest_stats(ing);
         }

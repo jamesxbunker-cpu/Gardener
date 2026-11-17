@@ -92,7 +92,7 @@ int dashboard_init(dashboard_server_t *dash, uint16_t port) {
     return 0;
 }
 
-void dashboard_poll(dashboard_server_t *dash) {
+void dashboard_poll(dashboard_server_t *dash, const registry_t *reg) {
     if (!dash || dash->listen_fd == (uintptr_t)INVALID_SOCK) return;
 
     /* 1. Accept new clients */
@@ -107,6 +107,9 @@ void dashboard_poll(dashboard_server_t *dash) {
                 dash->client_fds[i] = (uintptr_t)new_fd;
                 plat_log(LOG_INFO, "dashboard: client connected");
                 send_str(new_fd, "{\"type\":\"hello\",\"version\":1}\n");
+                if (reg) {
+                    dashboard_send_registry(dash, reg);
+                }
                 break;
             }
         }
@@ -118,8 +121,6 @@ void dashboard_poll(dashboard_server_t *dash) {
         if (fd == INVALID_SOCK) continue;
 
         char buf[1];
-        /* Peek to see if the socket is closed. Because it's non-blocking,
-         * this will return -1 immediately if there's no data. */
 #ifdef _WIN32
         int n = recv(fd, buf, 1, MSG_PEEK);
         if (n == 0 || (n < 0 && WSAGetLastError() != WSAEWOULDBLOCK)) {

@@ -30,7 +30,7 @@ typedef struct {
 int dashboard_init(dashboard_server_t *dash, uint16_t port);
 
 /* Poll for new connections or disconnects. Call this in the main loop. */
-void dashboard_poll(dashboard_server_t *dash);
+void dashboard_poll(dashboard_server_t *dash, const registry_t *reg);
 
 /* Send an event to all connected dashboards. */
 void dashboard_send_event(dashboard_server_t *dash, const event_t *e);

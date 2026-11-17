@@ -12,16 +12,13 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-# --- State ---
 GARDENER_HOST = '127.0.0.1'
 GARDENER_PORT = 5556
-events = deque(maxlen=50) # Keep the last 50 events
+events = deque(maxlen=50)
 registry = {}
 connected = False
 
 app = FastAPI()
-
-# Dynamically find the templates folder relative to this script
 base_dir = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(base_dir, "templates"))
 
@@ -30,11 +27,12 @@ def listen_to_gardener():
     while True:
         try:
             print(f"Connecting to Gardener at {GARDENER_HOST}:{GARDENER_PORT}...")
-            with socket.create_connection((GARDENER_HOST, GARDENER_PORT), timeout=5) as s:
+            with socket.create_connection((GARDENER_HOST, GARDENER_PORT)) as s:
                 connected = True
                 print("Connected!")
                 buffer = ""
                 while True:
+                    # This blocks indefinitely waiting for data. No timeout.
                     data = s.recv(4096)
                     if not data:
                         break
@@ -48,7 +46,7 @@ def listen_to_gardener():
                             if msg.get('type') == 'registry':
                                 for ch in msg['channels']:
                                     registry[ch['id']] = ch
-                            elif 'detector' in msg: # It's an event
+                            elif 'detector' in msg:
                                 msg['_recv_time'] = time.time()
                                 events.appendleft(msg)
                         except json.JSONDecodeError:
@@ -59,14 +57,12 @@ def listen_to_gardener():
             print(f"Error: {e}")
         finally:
             connected = False
-        time.sleep(2) # Reconnect loop
+        time.sleep(2)
 
-# Start background listener
 threading.Thread(target=listen_to_gardener, daemon=True).start()
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    """Render the main UI."""
     return templates.TemplateResponse(
         request=request, 
         name="index.html", 
@@ -75,8 +71,6 @@ async def index(request: Request):
 
 @app.get("/api/events")
 async def get_events():
-    """Polled by the frontend to get updates."""
-    # Enrich events with channel names from the registry
     enriched_events = []
     for e in events:
         e_copy = e.copy()
